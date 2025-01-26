@@ -19,7 +19,7 @@ class Database():
         try:
             conn = Database.connection()
             with conn.cursor() as cur:
-                sql = "CREATE TABLE tasks (id SERIAL PRIMARY KEY, description TEXT, responsible VARCHAR(50), cabinet VARCHAR(50), date DATE, comment TEXT, status BOOLEAN DEFAULT False);"
+                sql = "CREATE TABLE tasks (id SERIAL PRIMARY KEY, description TEXT, responsible VARCHAR(50), cabinet VARCHAR(50), date DATE, comment TEXT, status BOOLEAN DEFAULT False, completed DATE);"
                 cur.execute(sql)
                 conn.commit()
             conn.close()
@@ -28,7 +28,7 @@ class Database():
 
     def get_tasks(status):
         conn = Database.connection()
-        sql = f"SELECT id, description, responsible, cabinet, date, comment, status FROM tasks WHERE status={status} ORDER BY id;"
+        sql = f"SELECT id, description, responsible, cabinet, date, comment, status, completed FROM tasks WHERE status={status} ORDER BY id;"
         with conn.cursor() as cur:
             cur.execute(sql)
             res_list = cur.fetchall()
@@ -52,6 +52,6 @@ class Database():
     def set_status_ready(id):
         conn = Database.connection()
         with conn.cursor() as cur:
-            cur.execute(f"UPDATE tasks SET status=True WHERE id={id};")
+            cur.execute(f"UPDATE tasks SET status=True, completed=NOW() WHERE id={id};")
             conn.commit()  
         conn.close()

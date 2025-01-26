@@ -81,7 +81,7 @@ def helpdesk():
             task_ready_list = db.get_tasks(True)
             number = 1
             for task in task_ready_list:
-                output_list.append((number, task[1], task[2], task[3], task[4].strftime("%d.%m.%Y"), task[5]))
+                output_list.append((number, task[1], task[2], task[3], task[5], task[7].strftime("%d.%m.%Y")))
                 number += 1
             clear_scope('output')
             with use_scope('output'):
@@ -90,8 +90,8 @@ def helpdesk():
                     "Задача",
                     "От кого поступила",
                     "№ кабинета",
-                    "Крайний срок выполнения",
-                    "Комментарий"
+                    "Комментарий",
+                    "Дата выполнения"
                     ])
             actions(buttons=["Назад"])
             
