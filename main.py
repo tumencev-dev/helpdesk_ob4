@@ -1,10 +1,14 @@
 from database import Database as db
 from pywebio.input import actions, input, input_group, textarea, DATE, TEXT, NUMBER
-from pywebio.output import put_table, use_scope, clear_scope
+from pywebio.output import put_table, put_html, use_scope, clear_scope
 from pywebio.platform import start_server
 from pywebio import config
+import datetime
 
 config(css_style="#output-container{margin: 0 auto; max-width: 1200px;} #input-cards{max-width: 1200px;}")
+
+today = datetime.date.today()
+tomorrow = today + datetime.timedelta(days=1)
 
 def helpdesk():
     while True:
@@ -14,7 +18,13 @@ def helpdesk():
         task_list = db.get_tasks(False)
         number = 1
         for task in task_list:
-            output_list.append((number, task[1], task[2], task[3], task[4].strftime("%d.%m.%Y"), task[5]))
+            if task[4] == today:
+                    date = put_html(f"""<b><p style="color: red;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
+            elif task[4] == tomorrow:
+                    date = put_html(f"""<b><p style="color: green;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
+            else:
+                 date = task[4].strftime("%d.%m.%Y")
+            output_list.append((number, task[1], task[2], task[3], date, task[5]))
             interaction_list.append((number, task[0]))
             number += 1
         with use_scope('output'):
