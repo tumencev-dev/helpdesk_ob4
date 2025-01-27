@@ -55,3 +55,10 @@ class Database():
             cur.execute(f"UPDATE tasks SET status=True, completed=NOW() WHERE id={id};")
             conn.commit()  
         conn.close()
+
+    def update_task(data_list):
+        conn = Database.connection()
+        with conn.cursor() as cur:
+            cur.execute(f"""UPDATE tasks SET description='{data_list[1]}', responsible='{data_list[2]}', cabinet='{data_list[3]}', date='{data_list[4]}', comment='{data_list[5]}' WHERE id={data_list[0]};""")
+            conn.commit()  
+        conn.close()

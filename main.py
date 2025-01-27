@@ -5,7 +5,7 @@ from pywebio.platform import start_server
 from pywebio import config
 import datetime
 
-config(title="HelpDesk", theme="dark", css_style="#output-container{margin: 0 auto; max-width: 1200px;} #input-cards{max-width: 1200px;}")
+config(title="HelpDesk", css_style="#output-container{margin: 0 auto; max-width: 1200px;} #input-cards{max-width: 1200px;}")
 
 today = datetime.date.today()
 tomorrow = today + datetime.timedelta(days=1)
@@ -41,9 +41,10 @@ def helpdesk():
             
         menu = actions(buttons=[
             {'label': 'Добавить задачу', 'value': 'set_task'},
+            {'label': 'Редактировать задачу', 'value': 'edit_task'},
             {'label': 'Удалить задачу', 'value': 'delete_task', 'color': 'danger'},
             {'label': 'Поставить отметку исполнения', 'value': 'mark_execution', 'color': 'success'},
-            {'label': 'Показать выполненные задачи', 'value': 'get_ready_tasks', 'color': 'success'},
+            {'label': 'Показать выполненные задачи', 'value': 'get_ready_tasks', 'color': 'info'},
         ])
 
         if menu == 'set_task':
@@ -96,7 +97,35 @@ def helpdesk():
                     "Дата выполнения"
                     ])
             actions(buttons=["Назад"])
+
+        elif menu == 'edit_task':
+            num = input('Введите номер задачи, которую нужно отредактировать:', type=NUMBER)
+            for element in interaction_list:
+                if element[0] == num:
+                    id = element[1]
+            data_task = db.get_tasks(False)
+            for task in data_task:
+                if task[0] == id:
+                    data = task
+            clear_scope('output')
+            edit_task = input_group('Добавить задачу', [
+                textarea('Текст задания:', name='description', value=data[1]),
+                input('Кто обратился?', type=TEXT, name='responsible', value=data[2]),
+                input('Какой кабинет?', type=TEXT, name='cabinet', value=data[3]),
+                input('Укажите крайний срок выполнения', type=DATE, name='date', value=data[4].strftime("%Y-%m-%d")),
+                input('Комментарий к заданию', type=TEXT, name='comment', value=data[5])
+            ])
+
+            data_list = [
+                data[0],
+                edit_task['description'],
+                edit_task['responsible'],
+                edit_task['cabinet'],
+                edit_task['date'],
+                edit_task['comment'] 
+                ]
             
+            db.update_task(data_list)
 
 
 start_server(helpdesk, port=8000, remote_access=True, auto_open_webbrowser=True, debug=True)
