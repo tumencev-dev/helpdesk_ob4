@@ -19,11 +19,13 @@ def helpdesk():
         number = 1
         for task in task_list:
             if task[4] == today:
-                    date = put_html(f"""<b><p style="color: red;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
+                date = put_html(f"""<b><p style="color: red;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
             elif task[4] == tomorrow:
-                    date = put_html(f"""<b><p style="color: green;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
+                date = put_html(f"""<b><p style="color: green;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
+            elif task[4] < today:
+                date = put_html(f"""<del><p style="color: red;">{task[4].strftime("%d.%m.%Y")}</p></del>""")
             else:
-                 date = task[4].strftime("%d.%m.%Y")
+                date = task[4].strftime("%d.%m.%Y")
             output_list.append((number, task[1], task[2], task[3], date, task[5]))
             interaction_list.append((number, task[0]))
             number += 1
