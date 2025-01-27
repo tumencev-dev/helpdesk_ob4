@@ -5,7 +5,7 @@ from pywebio.platform import start_server
 from pywebio import config
 import datetime
 
-config(css_style="#output-container{margin: 0 auto; max-width: 1200px;} #input-cards{max-width: 1200px;}")
+config(title="HelpDesk", theme="dark", css_style="#output-container{margin: 0 auto; max-width: 1200px;} #input-cards{max-width: 1200px;}")
 
 today = datetime.date.today()
 tomorrow = today + datetime.timedelta(days=1)
@@ -99,4 +99,4 @@ def helpdesk():
             
 
 
-start_server(helpdesk, port=8080, remote_access=True, auto_open_webbrowser=True, debug=True)
+start_server(helpdesk, port=8000, remote_access=True, auto_open_webbrowser=True, debug=True)
