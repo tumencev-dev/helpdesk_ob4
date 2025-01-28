@@ -7,12 +7,12 @@ import datetime
 
 config(title="HelpDesk", css_style="#output-container{margin: 0 auto; max-width: 1200px;} #input-cards{max-width: 1200px;}")
 
-today = datetime.date.today()
-tomorrow = today + datetime.timedelta(days=1)
+db.create_db()
 
 def helpdesk():
     while True:
-        db.create_db()
+        today = datetime.date.today()
+        tomorrow = today + datetime.timedelta(days=1)
         clear_scope('output')
         output_list, interaction_list = [], []
         task_list = db.get_tasks(False)
