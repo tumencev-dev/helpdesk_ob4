@@ -1,6 +1,6 @@
 from database import Database as db
 from pywebio.input import actions, input, input_group, textarea, DATE, TEXT, NUMBER
-from pywebio.output import put_table, put_html, use_scope, clear_scope
+from pywebio.output import put_text, put_table, put_html, use_scope, clear_scope
 from pywebio.platform import start_server
 from pywebio import config
 import datetime
@@ -14,22 +14,44 @@ def helpdesk():
         today = datetime.date.today()
         tomorrow = today + datetime.timedelta(days=1)
         clear_scope('output')
-        output_list, interaction_list = [], []
+        output_list_today, output_list_tomorrow, output_list, interaction_list = [], [], [], []
         task_list = db.get_tasks(False, "date")
         number = 1
         for task in task_list:
             if task[4] == today:
                 date = put_html(f"""<b><p style="color: red;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
+                output_list_today.append((number, task[1], task[2], task[3], date, task[5]))
             elif task[4] == tomorrow:
                 date = put_html(f"""<b><p style="color: green;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
+                output_list_tomorrow.append((number, task[1], task[2], task[3], date, task[5]))
             elif task[4] < today:
                 date = put_html(f"""<del><p style="color: red;">{task[4].strftime("%d.%m.%Y")}</p></del>""")
+                output_list_today.append((number, task[1], task[2], task[3], date, task[5]))
             else:
                 date = task[4].strftime("%d.%m.%Y")
-            output_list.append((number, task[1], task[2], task[3], date, task[5]))
+                output_list.append((number, task[1], task[2], task[3], date, task[5]))
             interaction_list.append((number, task[0]))
             number += 1
         with use_scope('output'):
+            put_text('Задачи на сегодня:')
+            put_table(output_list_today, header=[
+                "№",
+                "Задача",
+                "От кого поступила",
+                "№ кабинета",
+                "Крайний срок выполнения",
+                "Комментарий"
+                ])
+            put_text('Задачи на завтра:')
+            put_table(output_list_tomorrow, header=[
+                "№",
+                "Задача",
+                "От кого поступила",
+                "№ кабинета",
+                "Крайний срок выполнения",
+                "Комментарий"
+                ])
+            put_text('Прочие задачи:')
             put_table(output_list, header=[
                 "№",
                 "Задача",
