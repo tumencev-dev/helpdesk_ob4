@@ -26,9 +26,9 @@ class Database():
         except Exception as error:
             pass
 
-    def get_tasks(status):
+    def get_tasks(status, sort):
         conn = Database.connection()
-        sql = f"SELECT id, description, responsible, cabinet, date, comment, status, completed FROM tasks WHERE status={status} ORDER BY id;"
+        sql = f"SELECT id, description, responsible, cabinet, date, comment, status, completed FROM tasks WHERE status={status} ORDER BY {sort};"
         with conn.cursor() as cur:
             cur.execute(sql)
             res_list = cur.fetchall()
