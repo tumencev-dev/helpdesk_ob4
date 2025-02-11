@@ -1,11 +1,39 @@
 from database import Database as db
 from pywebio.input import actions, input, input_group, textarea, DATE, TEXT, NUMBER
-from pywebio.output import put_text, put_table, put_html, use_scope, clear_scope
+from pywebio.output import put_text, put_table, put_html, use_scope, clear_scope, toast
 from pywebio.platform import start_server
 from pywebio import config
 import datetime
 
-config(title="HelpDesk", css_style="#output-container{margin: 0 auto; max-width: 1200px;} #input-cards{max-width: 1200px;}")
+css = """
+#output-container {
+    margin: 0 auto;
+    max-width: 1200px;
+}
+#input-cards {
+    max-width: 1200px;
+}
+table {
+   width: 100%;
+}
+td:first-child {
+   width: 10px;
+}
+tr td:nth-child(2) {
+   width: 450px;
+}
+tr td:nth-child(3) {
+   width: 180px;
+}
+tr td:nth-child(4) {
+   width: 180px;
+}
+tr td:nth-child(5) {
+   width: 135px;
+}
+"""
+
+config(title="HelpDesk", css_style=css)
 
 db.create_db()
 
@@ -14,18 +42,18 @@ def helpdesk():
         today = datetime.date.today()
         tomorrow = today + datetime.timedelta(days=1)
         clear_scope('output')
-        output_list_today, output_list_tomorrow, output_list, interaction_list = [], [], [], []
+        output_list_today, output_list, interaction_list = [], [], []
         task_list = db.get_tasks(False, "date")
         number = 1
         for task in task_list:
             if task[4] == today:
-                date = put_html(f"""<b><p style="color: red;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
+                date = put_text(task[4].strftime("%d.%m.%Y")).style('color: red')
                 output_list_today.append((number, task[1], task[2], task[3], date, task[5]))
             elif task[4] == tomorrow:
-                date = put_html(f"""<b><p style="color: green;">{task[4].strftime("%d.%m.%Y")}</p></b>""")
-                output_list_tomorrow.append((number, task[1], task[2], task[3], date, task[5]))
+                date = put_text(task[4].strftime("%d.%m.%Y")).style('color: green; font-weight: bold;')
+                output_list_today.append((number, task[1], task[2], task[3], date, task[5]))
             elif task[4] < today:
-                date = put_html(f"""<del><p style="color: red;">{task[4].strftime("%d.%m.%Y")}</p></del>""")
+                date = put_text(task[4].strftime("%d.%m.%Y")).style('color: red; text-decoration: line-through;')
                 output_list_today.append((number, task[1], task[2], task[3], date, task[5]))
             else:
                 date = task[4].strftime("%d.%m.%Y")
@@ -33,33 +61,24 @@ def helpdesk():
             interaction_list.append((number, task[0]))
             number += 1
         with use_scope('output'):
-            put_text('Задачи на сегодня:')
+            put_text('Задачи на сегодня, завтра:').style('font-weight: bold;')
             put_table(output_list_today, header=[
                 "№",
                 "Задача",
                 "От кого поступила",
                 "№ кабинета",
-                "Крайний срок выполнения",
+                "Крайний срок",
                 "Комментарий"
-                ])
-            put_text('Задачи на завтра:')
-            put_table(output_list_tomorrow, header=[
-                "№",
-                "Задача",
-                "От кого поступила",
-                "№ кабинета",
-                "Крайний срок выполнения",
-                "Комментарий"
-                ])
-            put_text('Прочие задачи:')
+                ],).style('width: 100 %; th {width: 20%;}')
+            put_text('Прочие задачи:').style('font-weight: bold;')
             put_table(output_list, header=[
                 "№",
                 "Задача",
                 "От кого поступила",
                 "№ кабинета",
-                "Крайний срок выполнения",
+                "Крайний срок",
                 "Комментарий"
-                ])
+                ]).style('width: 100%;')
             
         menu = actions(buttons=[
             {'label': 'Добавить задачу', 'value': 'set_task'},
@@ -87,6 +106,7 @@ def helpdesk():
                     new_task["date"],
                     new_task['comment']
                     ])
+                toast('Новая задача добавлена')
             
         elif menu == 'delete_task':
             num = input('Введите номер задачи для удаления:', type=NUMBER)
@@ -95,6 +115,7 @@ def helpdesk():
                     if element[0] == num:
                         id = element[1]
                 db.delete_task(id)
+                toast('Задача удалена', color='red')
         
         elif menu == 'mark_execution':
             num = input('Введите номер задачи чтобы пометить её как завершенное:', type=NUMBER)
@@ -103,6 +124,7 @@ def helpdesk():
                     if element[0] == num:
                         id = element[1]
                 db.set_status_ready(id)
+                toast('Задача выполнена', color='green')
 
         elif menu == 'get_ready_tasks':
             output_list = []
@@ -155,6 +177,7 @@ def helpdesk():
                         ]
                     
                     db.update_task(data_list)
+                    toast('Задача отредактирована')
 
 
 start_server(helpdesk, port=8000, remote_access=True, auto_open_webbrowser=True, debug=True)
