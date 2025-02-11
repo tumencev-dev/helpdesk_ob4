@@ -13,6 +13,9 @@ css = """
 #input-cards {
     max-width: 1200px;
 }
+#input-container.fixed {
+    padding: 10px 0;
+}
 table {
    width: 100%;
 }
@@ -31,6 +34,7 @@ tr td:nth-child(4) {
 tr td:nth-child(5) {
    width: 135px;
 }
+
 """
 
 config(title="HelpDesk", css_style=css)
