@@ -1,4 +1,3 @@
-from os import path
 import psycopg2
 
 
@@ -15,16 +14,18 @@ class Database():
                 cur.execute(sql)
             conn.close()
         except Exception as error:
-            pass
+            return error
+        
+    def create_table():
         try:
             conn = Database.connection()
             with conn.cursor() as cur:
-                sql = "CREATE TABLE tasks (id SERIAL PRIMARY KEY, description TEXT, responsible VARCHAR(50), cabinet VARCHAR(50), date DATE, comment TEXT, status BOOLEAN DEFAULT False, completed DATE, reminder BOOLEAN DEFAULT False, reminder_datetime DATETIME);"
+                sql = "CREATE TABLE tasks (id SERIAL PRIMARY KEY, description TEXT, responsible VARCHAR(50), cabinet VARCHAR(50), date DATE, comment TEXT, status BOOLEAN DEFAULT False, completed DATE, reminder BOOLEAN DEFAULT False, reminder_datetime TIMESTAMP);"
                 cur.execute(sql)
                 conn.commit()
             conn.close()
         except Exception as error:
-            pass
+            return error
 
     def get_tasks(status, sort):
         conn = Database.connection()

@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import sys
-from os import getenv
 from database import Database as db
 from datetime import datetime, timedelta, date
 

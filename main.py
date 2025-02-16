@@ -1,9 +1,12 @@
 from database import Database as db
 from pywebio.input import actions, input, input_group, textarea, checkbox, DATE, DATETIME, TEXT, NUMBER
-from pywebio.output import put_text, put_table, use_scope, clear_scope, toast
+from pywebio.output import put_text, put_table, put_button, put_html, popup, close_popup, use_scope, clear_scope, toast
 from pywebio.platform import start_server
 from pywebio import config
+from pywebio.session import run_js
 import datetime
+
+
 
 css = """
 #output-container {
@@ -37,9 +40,28 @@ tr td:nth-child(5) {
 
 """
 
+
 config(title="HelpDesk", css_style=css)
 
-db.create_db()
+
+print(db.create_db())
+print(db.create_table())
+
+
+def show_task_description(task_number, description):
+    with popup(task_number):
+        put_text(description[1])
+        put_html('<br>')
+        put_button('Закрыть', onclick=close_popup)
+        put_button('Удалить задачу', color='danger', onclick=lambda t=description: delete_task(description[0]), outline=True)
+
+
+def delete_task(id):
+    db.delete_task(id)
+    close_popup()
+    run_js("location.reload()")
+    toast('Задача удалена', color='red')
+    
 
 def helpdesk():
     while True:
@@ -52,9 +74,9 @@ def helpdesk():
         for task in task_list:
             if task[8] == True:
                 # Номер задачи с напоминанием выделяется зеленым
-                num = put_text(number).style('color: green; font-weight: bold;')
+                num = put_button(number, color='success', onclick=lambda n=number, t=task: show_task_description(f'Задача №{n}', t), outline=True)
             else:
-                num = number
+                num = put_button(number, color='primary', onclick=lambda n=number, t=task: show_task_description(f'Задача №{n}', t), outline=True)
             if task[4] == today:
                 date = put_text(task[4].strftime("%d.%m.%Y")).style('color: red')
                 output_list_today.append((num, task[1], task[2], task[3], date, task[5]))
@@ -92,10 +114,10 @@ def helpdesk():
         menu = actions(buttons=[
             {'label': 'Добавить задачу', 'value': 'set_task'},
             {'label': 'Редактировать задачу', 'value': 'edit_task'},
-            {'label': 'Удалить задачу', 'value': 'delete_task', 'color': 'danger'},
             {'label': 'Поставить отметку исполнения', 'value': 'mark_execution', 'color': 'success'},
             {'label': 'Показать выполненные задачи', 'value': 'get_ready_tasks', 'color': 'info'},
         ])
+
 
         if menu == 'set_task':
             clear_scope('output')
@@ -126,15 +148,7 @@ def helpdesk():
                     ])
                 toast('Новая задача добавлена')
             
-        elif menu == 'delete_task':
-            num = input('Введите номер задачи для удаления:', type=NUMBER)
-            if num != None:
-                for element in interaction_list:
-                    if element[0] == num:
-                        id = element[1]
-                db.delete_task(id)
-                toast('Задача удалена', color='red')
-        
+
         elif menu == 'mark_execution':
             num = input('Введите номер задачи чтобы пометить её как завершенное:', type=NUMBER)
             if num != None:
@@ -143,6 +157,7 @@ def helpdesk():
                         id = element[1]
                 db.set_status_ready(id)
                 toast('Задача выполнена', color='green')
+
 
         elif menu == 'get_ready_tasks':
             output_list = []
@@ -163,6 +178,7 @@ def helpdesk():
                     "Дата выполнения"
                     ])
             actions(buttons=["Назад"])
+
 
         elif menu == 'edit_task':
             num = input('Введите номер задачи, которую нужно отредактировать:', type=NUMBER)
