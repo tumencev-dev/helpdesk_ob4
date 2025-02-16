@@ -1,6 +1,6 @@
 from database import Database as db
-from pywebio.input import actions, input, input_group, textarea, DATE, TEXT, NUMBER
-from pywebio.output import put_text, put_table, put_html, use_scope, clear_scope, toast
+from pywebio.input import actions, input, input_group, textarea, checkbox, DATE, DATETIME, TEXT, NUMBER
+from pywebio.output import put_text, put_table, use_scope, clear_scope, toast
 from pywebio.platform import start_server
 from pywebio import config
 import datetime
@@ -50,18 +50,23 @@ def helpdesk():
         task_list = db.get_tasks(False, "date")
         number = 1
         for task in task_list:
+            if task[8] == True:
+                # Номер задачи с напоминанием выделяется зеленым
+                num = put_text(number).style('color: green; font-weight: bold;')
+            else:
+                num = number
             if task[4] == today:
                 date = put_text(task[4].strftime("%d.%m.%Y")).style('color: red')
-                output_list_today.append((number, task[1], task[2], task[3], date, task[5]))
+                output_list_today.append((num, task[1], task[2], task[3], date, task[5]))
             elif task[4] == tomorrow:
                 date = put_text(task[4].strftime("%d.%m.%Y")).style('color: green; font-weight: bold;')
-                output_list_today.append((number, task[1], task[2], task[3], date, task[5]))
+                output_list_today.append((num, task[1], task[2], task[3], date, task[5]))
             elif task[4] < today:
                 date = put_text(task[4].strftime("%d.%m.%Y")).style('color: red; text-decoration: line-through;')
-                output_list_today.append((number, task[1], task[2], task[3], date, task[5]))
+                output_list_today.append((num, task[1], task[2], task[3], date, task[5]))
             else:
                 date = task[4].strftime("%d.%m.%Y")
-                output_list.append((number, task[1], task[2], task[3], date, task[5]))
+                output_list.append((num, task[1], task[2], task[3], date, task[5]))
             interaction_list.append((number, task[0]))
             number += 1
         with use_scope('output'):
@@ -99,16 +104,25 @@ def helpdesk():
                 input('Кто обратился?', type=TEXT, name='responsible'),
                 input('Какой кабинет?', type=TEXT, name='cabinet'),
                 input('Укажите крайний срок выполнения', type=DATE, name='date', value=str(today)),
-                input('Комментарий к заданию', type=TEXT, name='comment')
+                input('Комментарий к заданию', type=TEXT, name='comment'),
+                checkbox('', ['Установить напоминание'], name='reminder')
             ], cancelable=True)
-            
+
             if new_task != None:
+                if new_task['reminder'] != []:
+                    reminder = True
+                    reminder_datetime = input('Укажите дату и время для напоминания', type=DATETIME)
+                else:
+                    reminder = False
+                    reminder_datetime = None
                 db.set_task([
                     new_task['description'],
                     new_task['responsible'],
                     new_task['cabinet'],
                     new_task["date"],
-                    new_task['comment']
+                    new_task['comment'],
+                    reminder,
+                    reminder_datetime
                     ])
                 toast('Новая задача добавлена')
             
@@ -167,21 +181,35 @@ def helpdesk():
                     input('Кто обратился?', type=TEXT, name='responsible', value=data[2]),
                     input('Какой кабинет?', type=TEXT, name='cabinet', value=data[3]),
                     input('Укажите крайний срок выполнения', type=DATE, name='date', value=data[4].strftime("%Y-%m-%d")),
-                    input('Комментарий к заданию', type=TEXT, name='comment', value=data[5])
+                    input('Комментарий к заданию', type=TEXT, name='comment', value=data[5]),
+                    checkbox('', ['Установить напоминание'], name='reminder')
                 ], cancelable=True)
-            
+                
                 if edit_task != None:
+                    if edit_task['reminder'] != []:
+                        reminder = True
+                        if data[9] == None:
+                            reminder_datetime = input('Укажите дату и время для напоминания', type=DATETIME)
+                        else:
+                            reminder_datetime = input('Укажите дату и время для напоминания', type=DATETIME, value=data[9].strftime("%Y-%m-%d %H:%M"))
+                    else:
+                        reminder = False
+                        reminder_datetime = 'NULL'
+
                     data_list = [
                         data[0],
                         edit_task['description'],
                         edit_task['responsible'],
                         edit_task['cabinet'],
                         edit_task['date'],
-                        edit_task['comment'] 
+                        edit_task['comment'],
+                        reminder,
+                        reminder_datetime
                         ]
-                    
-                    db.update_task(data_list)
-                    toast('Задача отредактирована')
+
+                    if reminder_datetime != '':
+                        db.update_task(data_list)
+                        toast('Задача отредактирована')
 
 
 start_server(helpdesk, port=8000, remote_access=True, auto_open_webbrowser=True, debug=True)
