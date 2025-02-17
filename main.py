@@ -53,10 +53,11 @@ def show_task_description(task_number, description):
         put_text(description[1])
         put_html('<br>')
         put_button('Закрыть', onclick=close_popup)
-        put_button('Удалить задачу', color='danger', onclick=lambda t=description: delete_task(description[0]), outline=True)
+        put_button('Удалить задачу', color='danger', onclick=lambda t=description: delete_task(t), outline=True)
 
 
-def delete_task(id):
+def delete_task(task):
+    id = task[0]
     db.delete_task(id)
     close_popup()
     run_js("location.reload()")
