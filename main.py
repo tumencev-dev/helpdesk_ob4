@@ -5,6 +5,7 @@ from pywebio.platform import start_server
 from pywebio import config
 from pywebio.session import run_js
 import datetime
+from time import sleep
 
 
 
@@ -47,6 +48,7 @@ config(title="HelpDesk", css_style=css)
 print(db.create_db())
 print(db.create_table())
 
+status_message = 0
 
 def show_task_description(task_number, description):
     with popup(task_number):
@@ -57,15 +59,20 @@ def show_task_description(task_number, description):
 
 
 def delete_task(task):
+    global status_message
     id = task[0]
     db.delete_task(id)
     close_popup()
     run_js("location.reload()")
-    toast('Задача удалена', color='red')
+    status_message = 1
     
 
 def helpdesk():
+    global status_message
     while True:
+        if status_message == 1:
+            toast('Задача удалена', color='red')
+            status_message = 0
         today = datetime.date.today()
         tomorrow = today + datetime.timedelta(days=1)
         clear_scope('output')
