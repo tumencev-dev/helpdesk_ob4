@@ -56,11 +56,6 @@ builder.add(InlineKeyboardButton(text="Удалить задачу 🗑", callba
 builder.add(InlineKeyboardButton(text="Пометить как выполненное ✅", callback_data="ready_task"))
 builder.adjust(1)
 
-today = str(date.today())
-tomorrow = str(date.today() + timedelta(days=1))
-button_today = KeyboardButton(text=today)
-button_tomorrow = KeyboardButton(text=tomorrow)
-days_kb = ReplyKeyboardMarkup(keyboard=[[button_today], [button_tomorrow]], resize_keyboard=True)
 
 button_yes = KeyboardButton(text='Да')
 button_no = KeyboardButton(text='Нет')
@@ -80,6 +75,11 @@ async def new_task(callback_query: CallbackQuery, state: FSMContext) -> None:
 @dp.message(NewTicket.input_description_ticket)
 async def new_task_description(message: Message, state: FSMContext):
     global new_task_data
+    today = str(date.today())
+    tomorrow = str(date.today() + timedelta(days=1))
+    button_today = KeyboardButton(text=today)
+    button_tomorrow = KeyboardButton(text=tomorrow)
+    days_kb = ReplyKeyboardMarkup(keyboard=[[button_today], [button_tomorrow]], resize_keyboard=True)
     new_task_data.append(message.text)
     await message.answer('📆 Введите дату крайнего срока в формате ГГГГ-ММ-ДД:', reply_markup=days_kb)
     await state.set_state(NewTicket.input_deadlinedate_ticket)

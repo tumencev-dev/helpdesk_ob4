@@ -38,5 +38,5 @@ while True:
         message = len(notification_list)
     for element in notification_list:
         if element[2].strftime("%Y-%m-%d %H:%M") == timestamp.strftime("%Y-%m-%d %H:%M"):
-            send_notification(f'⚠️ Напоминание в {element[2].strftime("%H:%M")} ⚠️\nТекст сообщения: {element[1]}')
+            send_notification(f'⚠️ Напоминание в {element[2].strftime("%H:%M")} ⚠️\n{element[1]}')
     sleep(60)
