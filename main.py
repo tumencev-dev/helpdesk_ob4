@@ -1,50 +1,17 @@
 from database import Database as db
 from pywebio.input import actions, input, input_group, textarea, checkbox, DATE, DATETIME, TEXT
-from pywebio.output import put_text, put_markdown, put_table, put_grid, put_column, put_row, put_button, put_buttons, put_html, popup, close_popup, use_scope, scroll_to, toast, clear
+from pywebio.output import put_text, put_markdown, put_table, put_grid, put_column, put_row, put_button, put_buttons, put_html, put_collapse, popup, close_popup, use_scope, scroll_to, toast, clear
 from pywebio.platform import start_server
 from pywebio import config
 from pywebio.session import run_js, hold
 import datetime
 
 
-css = """
-#output-container {
-    margin: 0 auto;
-    max-width: 1200px;
-}
-#input-cards {
-    max-width: 1200px;
-}
-#input-container.fixed {
-    padding: 10px 0;
-}
-table {
-   width: 100%;
-}
-td:first-child {
-   width: 10px;
-}
-tr td:nth-child(2) {
-   width: 450px;
-}
-tr td:nth-child(3) {
-   width: 180px;
-}
-tr td:nth-child(4) {
-   width: 180px;
-}
-tr td:nth-child(5) {
-   width: 135px;
-}
-
-"""
-
-
-config(title="Helpdesk Tasks", css_style=css)
-
-
 print(db.create_db())
 print(db.create_table())
+
+
+config(title="Helpdesk Tasks")
 
 
 status_message = 0
@@ -118,7 +85,8 @@ def show_task_description(task_number, description):
         
         put_html('</div>')  # Закрываем основной контейнер
         scroll_to(position='top')
-        
+
+
 def confirm_delete(numer, task):
     with popup("Удаление задачи"):
         put_text("Вы точно хотите удалить эту задачу?")
@@ -271,49 +239,46 @@ def get_ready_tasks():
     run_js("location.reload()")
 
 
+def get_date_style(task_date):
+    today = datetime.date.today()
+    if task_date == today:
+        return 'color: #c53030; font-weight: 500;'
+    elif task_date == today + datetime.timedelta(days=1):
+        return 'color: #2f855a; font-weight: 500;'
+    elif task_date < today:
+        return 'color: #c53030; text-decoration: line-through;'
+    return ''
+
+
+def get_task_group(task_date):
+    today = datetime.date.today()
+    if task_date == today:
+        return '🔥 Сегодня'
+    if task_date == today + datetime.timedelta(days=1):
+        return '⏳ Завтра'
+    if task_date < today:
+        return '⚠️ Просрочено'
+    return '📅 Остальные'
+
+
 
 def helpdesk():
     global status_message
     while True:
-        if status_message == 1:
-            toast('Задача удалена', color='red')
+        # Обработка системных уведомлений
+        toast_config = {
+            1: ('Задача удалена', 'red'),
+            2: ('Задача выполнена', 'green'),
+            3: ('Задача отредактирована', 'blue'),
+            4: ('Новая задача добавлена', 'teal')
+        }
+        if status_message in toast_config:
+            msg, color = toast_config[status_message]
+            toast(msg, color=color)
             status_message = 0
-        elif status_message == 2:
-            toast('Задача выполнена', color='green')
-            status_message = 0
-        elif status_message == 3:
-            toast('Задача отредактирована')
-            status_message = 0
-        elif status_message == 4:
-            toast('Новая задача добавлена')
-            status_message = 0
-        today = datetime.date.today()
-        tomorrow = today + datetime.timedelta(days=1)
-        clear()
-        output_list_today, output_list, interaction_list = [], [], []
-        task_list = db.get_tasks(False, "date")
-        number = 1
-        for task in task_list:
-            if task[8] == True:
-                # Номер задачи с напоминанием выделяется зеленым
-                num = put_button(number, color='success', onclick=lambda n=number, t=task: show_task_description(n, t), outline=True, small=True)
-            else:
-                num = put_button(number, color='primary', onclick=lambda n=number, t=task: show_task_description(n, t), outline=True, small=True)
-            if task[4] == today:
-                date = put_text(task[4].strftime("%d.%m.%Y")).style('color: red')
-                output_list_today.append((num, task[1], task[2], task[3], date, task[5]))
-            elif task[4] == tomorrow:
-                date = put_text(task[4].strftime("%d.%m.%Y")).style('color: green; font-weight: bold;')
-                output_list_today.append((num, task[1], task[2], task[3], date, task[5]))
-            elif task[4] < today:
-                date = put_text(task[4].strftime("%d.%m.%Y")).style('color: red; text-decoration: line-through;')
-                output_list_today.append((num, task[1], task[2], task[3], date, task[5]))
-            else:
-                date = task[4].strftime("%d.%m.%Y")
-                output_list.append((num, task[1], task[2], task[3], date, task[5]))
-            interaction_list.append((number, task[0]))
-            number += 1
-        with use_scope('output'):
+
+        with use_scope('output', clear=True):
+            put_html('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">')
             # Заголовок страницы
             put_row([
                 put_html('<h2 style="margin: 0; color: #2d3748;">🎯 Helpdesk Tasks</h2>'),
@@ -323,25 +288,77 @@ def helpdesk():
                 ], onclick=[lambda: set_task(), lambda: get_ready_tasks()]).style('margin-left: auto;')
             ]).style('align-items: center; margin-bottom: 30px;')
 
-            put_text('Задачи на сегодня, завтра:').style('font-weight: bold;')
-            put_table(output_list_today, header=[
-                "№",
-                "Задача",
-                "От кого поступила",
-                "№ кабинета",
-                "Крайний срок",
-                "Комментарий"
-                ],).style('width: 100 %; th {width: 20%;}')
-            put_text('Прочие задачи:').style('font-weight: bold;')
-            put_table(output_list, header=[
-                "№",
-                "Задача",
-                "От кого поступила",
-                "№ кабинета",
-                "Крайний срок",
-                "Комментарий"
-                ]).style('width: 100%;')
-            
+            # Генерация списков задач
+            task_groups = {
+                '⚠️ Просрочено': [],
+                '🔥 Сегодня': [],
+                '⏳ Завтра': [],
+                '📅 Остальные': []
+            }
+
+            number = 1
+            for task in db.get_tasks(False, "date"):
+                task_id = task[0]
+                task_data = task
+                btn_style = 'success' if task[8] else 'primary'
+
+                # Создаем элементы отдельно
+                with use_scope(f'task-{task_id}', clear=True):
+                    # Кнопка номера задачи
+                    num_btn = put_button(
+                        label=str(number),
+                        color=btn_style,
+                        outline=True,
+                        onclick=lambda n=number, t=task_data: show_task_description(n, t)
+                    ).style('margin-right: 15px;')
+                    number += 1
+
+                    # Блок с информацией
+                    info_block = put_column([
+                        put_markdown(f"**{task[1]}**"),
+                        put_row([
+                            put_column([
+                                put_html(f'<i class="fas fa-user"></i> {task[2]}').style('color: #718096;'),
+                                put_html(f'<i class="fas fa-door-open"></i> {task[3]}').style('color: #718096;')
+                            ]),
+                            put_column([
+                                put_html(
+                                    f'<div style="display: flex; align-items: center; gap: 8px; {get_date_style(task[4])}">'
+                                    f'<i class="fas fa-calendar-day"></i>'
+                                    f'<span>{task[4].strftime("%d.%m.%Y")}</span>'
+                                    '</div>'
+                                )
+                            ]).style('margin-left: auto;')
+                        ])
+                    ])
+
+                    # Собираем карточку
+                    card = put_row([
+                        num_btn,
+                        info_block
+                    ], size='10% 90%').style(
+                        'background: white;'
+                        'border-radius: 12px;'
+                        'padding: 20px;'
+                        'margin: 10px 0;'
+                        'box-shadow: 0 2px 8px rgba(0,0,0,0.1);'
+                        'align-items: flex-start;'
+                        'width: 100%;'
+                    )
+
+                # Добавляем в группу
+                task_groups[get_task_group(task[4])].append(card)
+
+            # Вывод сгруппированных задач
+            for group_name, tasks in task_groups.items():
+                if tasks:
+                    put_collapse(
+                        title=group_name,
+                        content=tasks,
+                        open=group_name in ['🔥 Сегодня', '⚠️ Просрочено']
+                    ).style('margin: 20px 0;')
+
+            scroll_to(position='top')
             hold()
 
 
