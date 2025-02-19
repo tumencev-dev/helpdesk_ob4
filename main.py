@@ -327,10 +327,10 @@ def helpdesk():
                                     f'<i class="fas fa-calendar-day"></i>'
                                     f'<span>{task[4].strftime("%d.%m.%Y")}</span>'
                                     '</div>'
-                                )
+                                ).style('margin-left: auto; height: 50px;')
                             ]).style('margin-left: auto;')
-                        ])
-                    ])
+                        ]).style('height: min-content;')
+                    ]).style('grid-template-rows: auto auto;')
 
                     # Собираем карточку
                     card = put_row([
