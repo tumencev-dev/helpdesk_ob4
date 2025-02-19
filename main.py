@@ -43,22 +43,35 @@ def show_task_description(task_number, description):
 
         # Основное содержание
         put_grid([
-            [put_markdown(f'**{description[1]}**').style('font-size: 18px; margin: 15px 0;')],
+            [put_markdown(f'**{description[1]}**').style('font-size: 18px; margin: 0 0 50px 0;')],
             [
-                put_column([
-                    put_html('<i class="fas fa-user" style="margin-right: 8px;"></i>'),
-                    put_text(f'От кого: {description[2]}')
-                ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
-                
-                put_column([
-                    put_html('<i class="fas fa-door-open" style="margin-right: 8px;"></i>'),
-                    put_text(f'Кабинет: {description[3]}')
-                ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
-                
-                put_column([
-                    put_html('<i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>'),
-                    put_text(f'Срок: {description[4].strftime("%d.%m.%Y")}')
-                ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
+                put_row([
+                    # Первый столбец
+                    put_column([
+                        put_column([
+                            put_html('<i class="fas fa-user" style="margin-right: 8px;"></i>'),
+                            put_text(f'От кого: {description[2]}')
+                        ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
+                        
+                        put_column([
+                            put_html('<i class="fas fa-door-open" style="margin-right: 8px;"></i>'),
+                            put_text(f'Кабинет: {description[3]}')
+                        ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
+                    ]).style('margin-right: 300px;'),  # Отступ между колонками
+                    
+                    # Второй столбец
+                    put_column([
+                        put_column([
+                            put_html('<i class="fas fa-calendar" style="margin-right: 8px;"></i>'),
+                            put_text(f'Срок: {description[4].strftime("%d.%m.%Y")}')
+                        ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
+
+                        put_column([
+                            put_html('<i class="fas fa-bell" style="margin-right: 8px;"></i>'),
+                            put_text(f'Напоминание: {description[9].strftime("%d.%m.%Y %H:%M") if description[8] else "Нет"}')
+                        ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
+                    ])
+                ]).style('display: flex; gap: 30px;')  # Общий контейнер с отступами
             ],
             [put_markdown('**Комментарий:**').style('margin-top: 20px;')],
             [put_text(description[5]).style(
@@ -329,8 +342,8 @@ def helpdesk():
                                     '</div>'
                                 ).style('margin-left: auto; height: 50px;')
                             ]).style('margin-left: auto;')
-                        ]).style('height: min-content;')
-                    ]).style('grid-template-rows: auto auto;')
+                        ])
+                    ])
 
                     # Собираем карточку
                     card = put_row([
