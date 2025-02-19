@@ -342,8 +342,8 @@ def helpdesk():
                                     '</div>'
                                 ).style('margin-left: auto; height: 50px;')
                             ]).style('margin-left: auto;')
-                        ])
-                    ])
+                        ]).style('height: min-content;')
+                    ]).style('grid-template-rows: auto auto;')
 
                     # Собираем карточку
                     card = put_row([
