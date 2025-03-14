@@ -18,6 +18,7 @@ status_message = 0
 
 
 def show_task_description(task_number, description):
+    global status_message
     clear()
     with use_scope('output-2'):
         put_html('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">')
@@ -40,6 +41,10 @@ def show_task_description(task_number, description):
                     <h2 style="margin: 0; color: #2c3e50;">Задача #{task_number}</h2>
                 </div>
         ''')
+
+        if status_message == 3:
+            toast('Задача отредактирована', color='blue')
+            status_message = 0
 
         # Основное содержание
         put_grid([
@@ -157,7 +162,7 @@ def edit_task(numer, task):
             input('Кто обратился?', type=TEXT, name='responsible', value=data[2]),
             input('Какой кабинет?', type=TEXT, name='cabinet', value=data[3]),
             input('Укажите крайний срок выполнения', type=DATE, name='date', value=data[4].strftime("%Y-%m-%d")),
-            input('Комментарий к заданию', type=TEXT, name='comment', value=data[5]),
+            textarea('Комментарий к заданию', name='comment', value=data[5]),
             checkbox('', ['Установить напоминание'], name='reminder')
         ], cancelable=True)
                 
@@ -185,10 +190,17 @@ def edit_task(numer, task):
 
             if reminder_datetime != '':
                 db.update_task(data_list)
-                run_js("location.reload()")
+                for task in db.get_tasks(False, "date"):
+                    if task[0] == data_list[0]:
+                        task_data = task
                 status_message = 3
+                show_task_description(task_number=numer, description=task_data)
+                
         else:
-            run_js("location.reload()")
+            for elem in db.get_tasks(False, "date"):
+                    if elem[0] == task[0]:
+                        task_data = elem
+            show_task_description(task_number=numer, description=task_data)
             
 
 def set_task():
@@ -202,7 +214,7 @@ def set_task():
         input('Кто обратился?', type=TEXT, name='responsible'),
         input('Какой кабинет?', type=TEXT, name='cabinet'),
         input('Укажите крайний срок выполнения', type=DATE, name='date', value=str(today)),
-        input('Комментарий к заданию', type=TEXT, name='comment'),
+        textarea('Комментарий к заданию', name='comment'),
         checkbox('', ['Установить напоминание'], name='reminder')
     ], cancelable=True)
 
@@ -282,7 +294,6 @@ def helpdesk():
         toast_config = {
             1: ('Задача удалена', 'red'),
             2: ('Задача выполнена', 'green'),
-            3: ('Задача отредактирована', 'blue'),
             4: ('Новая задача добавлена', 'teal')
         }
         if status_message in toast_config:

@@ -39,6 +39,8 @@ def is_valid_date(date_text):
 class NewTicket(StatesGroup):
     input_description_ticket = State()
     input_deadlinedate_ticket = State()
+    input_reminder_ticket = State()
+    input_reminder_date_ticket = State()
 
 class DelTicket(StatesGroup):
     delete_ticket_id = State()
@@ -90,22 +92,53 @@ async def new_task_deadlinedate(message: Message, state: FSMContext):
     deadline_text = message.text
     if is_valid_date(deadline_text):
         new_task_data.append(message.text)
+        await message.answer("Хотите добавить напоминание для этой задачи?", reply_markup=choice_kb)
+        await state.set_state(NewTicket.input_reminder_ticket)
+    else:
+        await message.answer('❌ Неверный формат даты')
+        await message.answer('Введите дату крайнего срока в формате: ГГГГ-ММ-ДД (с сегодняшнего дня, до 31 января 2030 года)')
+        await state.set_state(NewTicket.input_deadlinedate_ticket)
+
+@dp.message(NewTicket.input_reminder_ticket)
+async def new_task_reminder(message: Message, state: FSMContext):
+    global new_task_data
+    if message.text == 'Да':
+        await message.answer('Введите время для напоминания в формате ЧЧ-ММ:', reply_markup=ReplyKeyboardRemove())
+        await state.set_state(NewTicket.input_reminder_date_ticket)
+    elif message.text == 'Нет':
         db.set_task([
+                        new_task_data[0],
+                        'Telegram Bot',
+                        '',
+                        new_task_data[1],
+                        '',
+                        False,
+                        None
+                        ])
+        await message.answer('Новая задача добавлена ✅', reply_markup=ReplyKeyboardRemove())
+        await state.clear()
+        await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
+
+@dp.message(NewTicket.input_reminder_date_ticket)
+async def new_task_reminder_date(message: Message, state: FSMContext):
+    global new_task_data
+    time = message.text
+    date_time = str(new_task_data[1]) + time
+    reminder_datetime = datetime.strptime(date_time, "%Y-%m-%d%H-%M")
+    new_task_data.append(reminder_datetime)
+    db.set_task([
                     new_task_data[0],
                     'Telegram Bot',
                     '',
                     new_task_data[1],
                     '',
-                    False,
-                    None
-                    ])
-        await message.answer('Новая задача добавлена ✅', reply_markup=ReplyKeyboardRemove())
-        await state.clear()
-        await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
-    else:
-        await message.answer('❌ Неверный формат даты')
-        await message.answer('Введите дату крайнего срока в формате: ГГГГ-ММ-ДД (с сегодняшнего дня, до 31 января 2030 года)')
-        await state.set_state(NewTicket.input_deadlinedate_ticket)
+                    True,
+                    new_task_data[2]
+                ])
+    await message.answer(f'Установлено напоминание - {reminder_datetime}')
+    await message.answer('Новая задача добавлена ✅')
+    await state.clear()
+    await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
 
 
 @dp.callback_query(F.data == "get_task")
