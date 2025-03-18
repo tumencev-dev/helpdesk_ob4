@@ -8,7 +8,7 @@ from aiogram import Bot, Dispatcher, html, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
-from aiogram.types import Message, InlineKeyboardButton, CallbackQuery, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -50,13 +50,17 @@ class ReadyTicket(StatesGroup):
     ready_ticket_id = State()
     ready_ticket_confirmation = State()
 
+class OpenTicket(StatesGroup):
+    open_ticket_id = State()
+
 
 builder = InlineKeyboardBuilder()
-builder.add(InlineKeyboardButton(text="Добавить новую задачу 📄", callback_data="set_task"))
-builder.add(InlineKeyboardButton(text="Задачи на сегодня, завтра 🗂", callback_data="get_task"))
+builder.add(InlineKeyboardButton(text="Новая задача 📄", callback_data="set_task"))
+builder.add(InlineKeyboardButton(text="Получить список 🗂", callback_data="get_task"))
+builder.add(InlineKeyboardButton(text="Открыть задачу 📋", callback_data="open_task"))
 builder.add(InlineKeyboardButton(text="Удалить задачу 🗑", callback_data="del_task")),
 builder.add(InlineKeyboardButton(text="Пометить как выполненное ✅", callback_data="ready_task"))
-builder.adjust(1)
+builder.adjust(2)
 
 
 button_yes = KeyboardButton(text='Да')
@@ -153,7 +157,7 @@ async def get_task_list(callback_query: CallbackQuery) -> None:
     for task in task_list:
         if task[4] <= tomorrow:
             output_list.append((num, task[1], task[4], task[8], task[9]))
-            edit_task_list.append((num, task[0], task[1]))
+            edit_task_list.append((num, task[1], task[2], task[3], task[4], task[5], task[9]))
             num += 1
     await callback_query.message.answer('<b>ЗАДАЧИ НА СЕГОДНЯ, ЗАВТРА:</b>')
     for element in output_list:
@@ -222,6 +226,39 @@ async def ready_task_sucess(message: Message, state: FSMContext):
         await message.answer('Действие отменено 🛑', reply_markup=ReplyKeyboardRemove())
         await state.clear()
         await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
+
+
+@dp.callback_query(F.data == "open_task")
+async def open_task(callback_query: CallbackQuery, state: FSMContext) -> None:
+    await callback_query.message.answer("Введите номер задачи, которую вы хотите открыть:")
+    await state.set_state(OpenTicket.open_ticket_id)
+
+@dp.message(OpenTicket.open_ticket_id)
+async def open_task_id(message: Message, state: FSMContext):
+    global edit_task_list
+    num_task = int(message.text)
+    for element in edit_task_list:
+        if num_task == element[0]:
+            task_card = (
+                f"📝 *Задание:* {element[1]}\n"
+                f"⏰ *Крайний срок:* {element[4]}\n"
+                f"👤 *От кого:* {element[2]}\n"
+                f"🚪 *Кабинет:* {element[3]}\n"
+                f"🔔 *Напоминание:* {element[6]}\n"
+                f"🚪 *Комментарий:* {element[5]}"
+            )
+            # Создаем инлайн-кнопки
+            builder = InlineKeyboardBuilder()
+            builder.add(InlineKeyboardButton(text="✏️ Редактировать", callback_data="edit_task"))
+            builder.add(InlineKeyboardButton(text="✅ Закрыть", callback_data="close_task"))
+            builder.adjust(1)
+            # Отправляем сообщение с карточкой и кнопками
+            await message.answer(task_card, parse_mode="Markdown", reply_markup=builder.as_markup())
+            await state.clear()
+
+@dp.callback_query(F.data == "close_task")
+async def close_task(callback_query: CallbackQuery) -> None:
+    await callback_query.message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
 
 
 @dp.message()
