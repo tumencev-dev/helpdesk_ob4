@@ -180,8 +180,8 @@ async def delete_task_id(message: Message, state: FSMContext):
     num_task = int(message.text)
     for element in edit_task_list:
         if num_task == element[0]:
-            delete_task_choice_id = element[1]
-            await message.answer(f"Вы действительно хотите удалить задачу: \n{element[2]}", reply_markup=choice_kb)
+            delete_task_choice_id = element[0]
+            await message.answer(f"Вы действительно хотите удалить задачу: \n{element[1]}", reply_markup=choice_kb)
             await state.set_state(DelTicket.delete_ticket_confirmation)
 
 @dp.message(DelTicket.delete_ticket_confirmation)
@@ -210,8 +210,8 @@ async def ready_task_id(message: Message, state: FSMContext):
     num_task = int(message.text)
     for element in edit_task_list:
         if num_task == element[0]:
-            ready_task_choice_id = element[1]
-            await message.answer(f"Вы действительно хотите завершить задачу: \n{element[2]}", reply_markup=choice_kb)
+            ready_task_choice_id = element[0]
+            await message.answer(f"Вы действительно хотите завершить задачу: \n{element[1]}", reply_markup=choice_kb)
             await state.set_state(ReadyTicket.ready_ticket_confirmation)
 
 @dp.message(ReadyTicket.ready_ticket_confirmation)
@@ -240,12 +240,12 @@ async def open_task_id(message: Message, state: FSMContext):
     for element in edit_task_list:
         if num_task == element[0]:
             task_card = (
-                f"📝 *Задание:* {element[1]}\n"
+                f"📝 *Задание:* {element[1]}\n\n"
                 f"⏰ *Крайний срок:* {element[4]}\n"
                 f"👤 *От кого:* {element[2]}\n"
                 f"🚪 *Кабинет:* {element[3]}\n"
                 f"🔔 *Напоминание:* {element[6]}\n"
-                f"🚪 *Комментарий:* {element[5]}"
+                f"💬 *Комментарий:* {element[5]}"
             )
             # Создаем инлайн-кнопки
             builder = InlineKeyboardBuilder()

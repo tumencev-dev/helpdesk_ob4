@@ -308,7 +308,7 @@ def helpdesk():
                 put_html('<h2 style="margin: 0; color: #2d3748;">🎯 Helpdesk Tasks</h2>'),
                 put_buttons([
                     {'label': '➕ Новая задача', 'value': 'add', 'color': 'primary'},
-                    {'label': '✅ Выполненные', 'value': 'completed', 'color': 'success'}
+                    {'label': '✔ Выполненные', 'value': 'completed', 'color': 'success'}
                 ], onclick=[lambda: set_task(), lambda: get_ready_tasks()]).style('margin-left: auto;')
             ]).style('align-items: center; margin-bottom: 30px;')
 
