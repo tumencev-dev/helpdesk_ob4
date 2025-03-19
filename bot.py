@@ -20,6 +20,8 @@ new_task_data = []
 edit_task_list = []
 delete_task_choice_id = 0
 ready_task_choice_id = 0
+add_comment_task_id = 0
+open_task = 0
 
 dp = Dispatcher()
 
@@ -52,6 +54,9 @@ class ReadyTicket(StatesGroup):
 
 class OpenTicket(StatesGroup):
     open_ticket_id = State()
+    
+class AddCommentTicket(StatesGroup):
+    add_comment_ticket = State()
 
 
 builder = InlineKeyboardBuilder()
@@ -157,7 +162,7 @@ async def get_task_list(callback_query: CallbackQuery) -> None:
     for task in task_list:
         if task[4] <= tomorrow:
             output_list.append((num, task[1], task[4], task[8], task[9]))
-            edit_task_list.append((num, task[1], task[2], task[3], task[4], task[5], task[9]))
+            edit_task_list.append((num, task[1], task[2], task[3], task[4], task[5], task[9], task[0]))
             num += 1
     await callback_query.message.answer('<b>ЗАДАЧИ НА СЕГОДНЯ, ЗАВТРА:</b>')
     for element in output_list:
@@ -180,7 +185,7 @@ async def delete_task_id(message: Message, state: FSMContext):
     num_task = int(message.text)
     for element in edit_task_list:
         if num_task == element[0]:
-            delete_task_choice_id = element[0]
+            delete_task_choice_id = element[7]
             await message.answer(f"Вы действительно хотите удалить задачу: \n{element[1]}", reply_markup=choice_kb)
             await state.set_state(DelTicket.delete_ticket_confirmation)
 
@@ -210,7 +215,7 @@ async def ready_task_id(message: Message, state: FSMContext):
     num_task = int(message.text)
     for element in edit_task_list:
         if num_task == element[0]:
-            ready_task_choice_id = element[0]
+            ready_task_choice_id = element[7]
             await message.answer(f"Вы действительно хотите завершить задачу: \n{element[1]}", reply_markup=choice_kb)
             await state.set_state(ReadyTicket.ready_ticket_confirmation)
 
@@ -236,21 +241,25 @@ async def open_task(callback_query: CallbackQuery, state: FSMContext) -> None:
 @dp.message(OpenTicket.open_ticket_id)
 async def open_task_id(message: Message, state: FSMContext):
     global edit_task_list
+    global add_comment_task_id
+    global open_task
     num_task = int(message.text)
+    open_task = num_task
     for element in edit_task_list:
         if num_task == element[0]:
+            add_comment_task_id = element[7]
             task_card = (
                 f"📝 *Задание:* {element[1]}\n\n"
                 f"⏰ *Крайний срок:* {element[4]}\n"
                 f"👤 *От кого:* {element[2]}\n"
                 f"🚪 *Кабинет:* {element[3]}\n"
-                f"🔔 *Напоминание:* {element[6]}\n"
-                f"💬 *Комментарий:* {element[5]}"
+                f"🔔 *Напоминание:* {element[6]}\n\n"
+                f"💬 *Комментарий:*\n{element[5]}"
             )
             # Создаем инлайн-кнопки
             builder = InlineKeyboardBuilder()
-            builder.add(InlineKeyboardButton(text="✏️ Редактировать", callback_data="edit_task"))
-            builder.add(InlineKeyboardButton(text="✅ Закрыть", callback_data="close_task"))
+            builder.add(InlineKeyboardButton(text="✏️ Добавить комментарий", callback_data="edit_task_comment"))
+            builder.add(InlineKeyboardButton(text="❌ Закрыть", callback_data="close_task"))
             builder.adjust(1)
             # Отправляем сообщение с карточкой и кнопками
             await message.answer(task_card, parse_mode="Markdown", reply_markup=builder.as_markup())
@@ -259,6 +268,41 @@ async def open_task_id(message: Message, state: FSMContext):
 @dp.callback_query(F.data == "close_task")
 async def close_task(callback_query: CallbackQuery) -> None:
     await callback_query.message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
+
+@dp.callback_query(F.data == "edit_task_comment")
+async def add_comment_task(callback_query: CallbackQuery, state: FSMContext) -> None:
+    await callback_query.message.answer("Введите текст комментария для добавления:")
+    await state.set_state(AddCommentTicket.add_comment_ticket)
+
+@dp.message(AddCommentTicket.add_comment_ticket)
+async def open_task_id(message: Message, state: FSMContext):
+    global add_comment_task_id
+    global edit_task_list #Нужно его обновить
+    global open_task
+    comment = db.get_task_to_id(add_comment_task_id)[0][5]
+    if comment == '':
+        edit_task_comment = comment + message.text
+    else:
+        edit_task_comment = comment + "\n" + message.text
+    db.update_task_comment(add_comment_task_id, edit_task_comment)
+    for element in edit_task_list:
+        if add_comment_task_id == element[7]:
+            task_card = (
+                f"📝 *Задание:* {element[1]}\n\n"
+                f"⏰ *Крайний срок:* {element[4]}\n"
+                f"👤 *От кого:* {element[2]}\n"
+                f"🚪 *Кабинет:* {element[3]}\n"
+                f"🔔 *Напоминание:* {element[6]}\n\n"
+                f"💬 *Комментарий:*\n{edit_task_comment}"
+            )
+            # Создаем инлайн-кнопки
+            builder = InlineKeyboardBuilder()
+            builder.add(InlineKeyboardButton(text="✏️ Добавить комментарий", callback_data="edit_task_comment"))
+            builder.add(InlineKeyboardButton(text="✅ Закрыть", callback_data="close_task"))
+            builder.adjust(1)
+            # Отправляем сообщение с карточкой и кнопками
+            await message.answer(task_card, parse_mode="Markdown", reply_markup=builder.as_markup())
+            await state.clear()
 
 
 @dp.message()

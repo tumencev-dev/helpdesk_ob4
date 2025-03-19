@@ -36,6 +36,15 @@ class Database():
         conn.close()
         return res_list # список
     
+    def get_task_to_id(id):
+        conn = Database.connection()
+        sql = f"SELECT * FROM tasks WHERE id={id};"
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            res_list = cur.fetchall()
+        conn.close()
+        return res_list # список
+    
     def set_task(data_list):
         conn = Database.connection()
         with conn.cursor() as cur:
@@ -64,6 +73,14 @@ class Database():
                 sql = f"""UPDATE tasks SET description='{data_list[1]}', responsible='{data_list[2]}', cabinet='{data_list[3]}', date='{data_list[4]}', comment='{data_list[5]}', reminder='{data_list[6]}', reminder_datetime={data_list[7]} WHERE id={data_list[0]};"""
             else:
                 sql = f"""UPDATE tasks SET description='{data_list[1]}', responsible='{data_list[2]}', cabinet='{data_list[3]}', date='{data_list[4]}', comment='{data_list[5]}', reminder='{data_list[6]}', reminder_datetime='{data_list[7]}' WHERE id={data_list[0]};"""
+            cur.execute(sql)
+            conn.commit()  
+        conn.close()
+
+    def update_task_comment(id, comment):
+        conn = Database.connection()
+        with conn.cursor() as cur:
+            sql = f"UPDATE tasks SET comment='{comment}'WHERE id={id};"
             cur.execute(sql)
             conn.commit()  
         conn.close()
