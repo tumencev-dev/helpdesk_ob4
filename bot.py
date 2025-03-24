@@ -74,13 +74,22 @@ choice_kb = ReplyKeyboardMarkup(keyboard=[[button_yes], [button_no]], resize_key
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    await message.answer(f"Приветствую, {html.bold(message.from_user.full_name)} 🙋", reply_markup=builder.as_markup())
+    welcome_text = (
+        f"✨ <b>Добро пожаловать, {html.quote(message.from_user.full_name)}!</b> ✨\n"
+        "──────────────────────\n"
+        "Я ваш персональный помощник по управлению задачами!\n\n"
+        "Выберите действие:"
+    )
+    await message.answer(welcome_text, reply_markup=builder.as_markup())
 
 @dp.callback_query(F.data == "set_task")
 async def new_task(callback_query: CallbackQuery, state: FSMContext) -> None:
     global new_task_data
     new_task_data = []
-    await callback_query.message.answer("📝 Введите заголовок вашей проблемы:")
+    await callback_query.message.answer(
+        "📌  <b>Шаг 1/3</b>\n"
+        "──────────────────────────\n"
+        "✏️ Введите описание вашей проблемы:")
     await state.set_state(NewTicket.input_description_ticket)
 
 @dp.message(NewTicket.input_description_ticket)
@@ -92,7 +101,10 @@ async def new_task_description(message: Message, state: FSMContext):
     button_tomorrow = KeyboardButton(text=tomorrow)
     days_kb = ReplyKeyboardMarkup(keyboard=[[button_today], [button_tomorrow]], resize_keyboard=True)
     new_task_data.append(message.text)
-    await message.answer('📆 Введите дату крайнего срока в формате ГГГГ-ММ-ДД:', reply_markup=days_kb)
+    await message.answer(
+        "📌  <b>Шаг 2/3</b>\n"
+        "──────────────────────────\n"
+        "📆 Введите дату крайнего срока в соответствии с форматом - ГГГГ-ММ-ДД:", reply_markup=days_kb)
     await state.set_state(NewTicket.input_deadlinedate_ticket)
 
 @dp.message(NewTicket.input_deadlinedate_ticket)
@@ -101,18 +113,25 @@ async def new_task_deadlinedate(message: Message, state: FSMContext):
     deadline_text = message.text
     if is_valid_date(deadline_text):
         new_task_data.append(message.text)
-        await message.answer("Хотите добавить напоминание для этой задачи?", reply_markup=choice_kb)
+        await message.answer(
+            "📌  <b>Шаг 3/3</b>\n"
+            "──────────────────────────\n"
+            "🔔 Хотите добавить напоминание для этой задачи?", reply_markup=choice_kb)
         await state.set_state(NewTicket.input_reminder_ticket)
     else:
-        await message.answer('❌ Неверный формат даты')
-        await message.answer('Введите дату крайнего срока в формате: ГГГГ-ММ-ДД (с сегодняшнего дня, до 31 января 2030 года)')
+        await message.answer(
+            '❌ Неверный формат даты\n'
+            "─────────────────────────────\n"
+            '📆 Введите дату крайнего срока в формате: ГГГГ-ММ-ДД\n'
+            '(с сегодняшнего дня, до 31 января 2030 года)')
         await state.set_state(NewTicket.input_deadlinedate_ticket)
 
 @dp.message(NewTicket.input_reminder_ticket)
 async def new_task_reminder(message: Message, state: FSMContext):
     global new_task_data
     if message.text == 'Да':
-        await message.answer('Введите время для напоминания в формате ЧЧ-ММ:', reply_markup=ReplyKeyboardRemove())
+        await message.answer(
+            '⏳ Введите время для напоминания в формате ЧЧ-ММ:', reply_markup=ReplyKeyboardRemove())
         await state.set_state(NewTicket.input_reminder_date_ticket)
     elif message.text == 'Нет':
         db.set_task([
@@ -249,12 +268,15 @@ async def open_task_id(message: Message, state: FSMContext):
         if num_task == element[0]:
             add_comment_task_id = element[7]
             task_card = (
-                f"📝 *Задание:* {element[1]}\n\n"
-                f"⏰ *Крайний срок:* {element[4]}\n"
-                f"👤 *От кого:* {element[2]}\n"
-                f"🚪 *Кабинет:* {element[3]}\n"
-                f"🔔 *Напоминание:* {element[6]}\n\n"
-                f"💬 *Комментарий:*\n{element[5]}"
+                f"🖇 <b>ДЕТАЛИ ЗАДАЧИ</b>\n"
+                f"────────────────────\n"
+                f"📌 <b>Заголовок:</b>\n{element[1]}\n\n"
+                f"⏳ <b>Срок выполнения:</b>\n{element[4]}\n\n"
+                f"👤 <b>Автор:</b> {element[2]}\n"
+                f"🚪 <b>Кабинет:</b> {element[3]}\n\n"
+                f"🔔 <b>Напоминание:</b> {'Установлено' if element[6] else 'Нет'}\n"
+                f"────────────────────\n"
+                f"💬 <b>Комментарии:</b>\n{element[5] or 'Пока нет комментариев'}"
             )
             # Создаем инлайн-кнопки
             builder = InlineKeyboardBuilder()
@@ -262,7 +284,7 @@ async def open_task_id(message: Message, state: FSMContext):
             builder.add(InlineKeyboardButton(text="❌ Закрыть", callback_data="close_task"))
             builder.adjust(1)
             # Отправляем сообщение с карточкой и кнопками
-            await message.answer(task_card, parse_mode="Markdown", reply_markup=builder.as_markup())
+            await message.answer(task_card, parse_mode="HTML", reply_markup=builder.as_markup())
             await state.clear()
 
 @dp.callback_query(F.data == "close_task")
