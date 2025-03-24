@@ -76,7 +76,7 @@ choice_kb = ReplyKeyboardMarkup(keyboard=[[button_yes], [button_no]], resize_key
 async def command_start_handler(message: Message) -> None:
     welcome_text = (
         f"✨ <b>Добро пожаловать, {html.quote(message.from_user.full_name)}!</b> ✨\n"
-        "──────────────────────\n"
+        "──────────────────────────────\n"
         "Я ваш персональный помощник по управлению задачами!\n\n"
         "Выберите действие:"
     )
@@ -87,8 +87,8 @@ async def new_task(callback_query: CallbackQuery, state: FSMContext) -> None:
     global new_task_data
     new_task_data = []
     await callback_query.message.answer(
-        "📌  <b>Шаг 1/3</b>\n"
-        "──────────────────────────\n"
+        "<b>Шаг 1/3</b>\n"
+        "──────────────────────────────\n"
         "✏️ Введите описание вашей проблемы:")
     await state.set_state(NewTicket.input_description_ticket)
 
@@ -102,8 +102,8 @@ async def new_task_description(message: Message, state: FSMContext):
     days_kb = ReplyKeyboardMarkup(keyboard=[[button_today], [button_tomorrow]], resize_keyboard=True)
     new_task_data.append(message.text)
     await message.answer(
-        "📌  <b>Шаг 2/3</b>\n"
-        "──────────────────────────\n"
+        "<b>Шаг 2/3</b>\n"
+        "──────────────────────────────\n"
         "📆 Введите дату крайнего срока в соответствии с форматом - ГГГГ-ММ-ДД:", reply_markup=days_kb)
     await state.set_state(NewTicket.input_deadlinedate_ticket)
 
@@ -114,14 +114,14 @@ async def new_task_deadlinedate(message: Message, state: FSMContext):
     if is_valid_date(deadline_text):
         new_task_data.append(message.text)
         await message.answer(
-            "📌  <b>Шаг 3/3</b>\n"
-            "──────────────────────────\n"
+            "<b>Шаг 3/3</b>\n"
+            "──────────────────────────────\n"
             "🔔 Хотите добавить напоминание для этой задачи?", reply_markup=choice_kb)
         await state.set_state(NewTicket.input_reminder_ticket)
     else:
         await message.answer(
             '❌ Неверный формат даты\n'
-            "─────────────────────────────\n"
+            "──────────────────────────────\n"
             '📆 Введите дату крайнего срока в формате: ГГГГ-ММ-ДД\n'
             '(с сегодняшнего дня, до 31 января 2030 года)')
         await state.set_state(NewTicket.input_deadlinedate_ticket)
@@ -163,8 +163,8 @@ async def new_task_reminder_date(message: Message, state: FSMContext):
                     True,
                     new_task_data[2]
                 ])
-    await message.answer(f'Установлено напоминание - {reminder_datetime}')
-    await message.answer('Новая задача добавлена ✅')
+    await message.answer(f'✅ Установлено напоминание - {reminder_datetime}')
+    await message.answer('✅ Новая задача добавлена')
     await state.clear()
     await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
 
@@ -180,15 +180,18 @@ async def get_task_list(callback_query: CallbackQuery) -> None:
     task_list = db.get_tasks(False, "date")
     for task in task_list:
         if task[4] <= tomorrow:
-            output_list.append((num, task[1], task[4], task[8], task[9]))
-            edit_task_list.append((num, task[1], task[2], task[3], task[4], task[5], task[9], task[0]))
+            output_list.append([num, task[1], task[4], task[8], task[9]])
+            edit_task_list.append([num, task[1], task[2], task[3], task[4], task[5], task[9], task[0]])
             num += 1
     await callback_query.message.answer('<b>ЗАДАЧИ НА СЕГОДНЯ, ЗАВТРА:</b>')
     for element in output_list:
-        if element[3] == True:
-            await callback_query.message.answer(f"<b>{element[0]}</b> - <i>{element[1]}</i> \n({element[2]}) \n⏰ Напоминание - {element[4]}")
-        else:
-            await callback_query.message.answer(f"<b>{element[0]}</b> - <i>{element[1]}</i> \n({element[2]})")
+        status_icon = "⏰" if element[4] else ' ─'
+        task_text = (
+            f"📌 <b>Задача {element[0]}</b>                                                      {status_icon}\n\n"
+            f"<pre>{element[1]}</pre>\n"
+            f"📅 <i>Срок:</i> {element[2].strftime("%d.%m.%Y")}"
+        )
+        await callback_query.message.answer(task_text)
     await callback_query.message.answer('Это все задачи на сегодня 🫣', reply_markup=builder.as_markup())
 
 
@@ -205,7 +208,7 @@ async def delete_task_id(message: Message, state: FSMContext):
     for element in edit_task_list:
         if num_task == element[0]:
             delete_task_choice_id = element[7]
-            await message.answer(f"Вы действительно хотите удалить задачу: \n{element[1]}", reply_markup=choice_kb)
+            await message.answer(f"⚠️ Вы действительно хотите удалить задачу? \n{element[1]}", reply_markup=choice_kb)
             await state.set_state(DelTicket.delete_ticket_confirmation)
 
 @dp.message(DelTicket.delete_ticket_confirmation)
@@ -213,11 +216,11 @@ async def delete_task_sucess(message: Message, state: FSMContext):
     global delete_task_choice_id
     if message.text == 'Да':
         db.delete_task(delete_task_choice_id)
-        await message.answer('Данная задача удалена ✅', reply_markup=ReplyKeyboardRemove())
+        await message.answer('✅ Данная задача удалена', reply_markup=ReplyKeyboardRemove())
         await state.clear()
         await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
     if message.text == 'Нет':
-        await message.answer('Действие отменено 🛑', reply_markup=ReplyKeyboardRemove())
+        await message.answer('🛑 Действие отменено', reply_markup=ReplyKeyboardRemove())
         await state.clear()
         await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
 
@@ -235,7 +238,7 @@ async def ready_task_id(message: Message, state: FSMContext):
     for element in edit_task_list:
         if num_task == element[0]:
             ready_task_choice_id = element[7]
-            await message.answer(f"Вы действительно хотите завершить задачу: \n{element[1]}", reply_markup=choice_kb)
+            await message.answer(f"⚠️ Вы действительно хотите завершить задачу? \n{element[1]}", reply_markup=choice_kb)
             await state.set_state(ReadyTicket.ready_ticket_confirmation)
 
 @dp.message(ReadyTicket.ready_ticket_confirmation)
@@ -243,11 +246,11 @@ async def ready_task_sucess(message: Message, state: FSMContext):
     global ready_task_choice_id
     if message.text == 'Да':
         db.set_status_ready(ready_task_choice_id)
-        await message.answer('Задача выполнена ✅', reply_markup=ReplyKeyboardRemove())
+        await message.answer('✅ Задача выполнена', reply_markup=ReplyKeyboardRemove())
         await state.clear()
         await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
     if message.text == 'Нет':
-        await message.answer('Действие отменено 🛑', reply_markup=ReplyKeyboardRemove())
+        await message.answer('🛑 Действие отменено', reply_markup=ReplyKeyboardRemove())
         await state.clear()
         await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
 
@@ -268,15 +271,14 @@ async def open_task_id(message: Message, state: FSMContext):
         if num_task == element[0]:
             add_comment_task_id = element[7]
             task_card = (
-                f"🖇 <b>ДЕТАЛИ ЗАДАЧИ</b>\n"
-                f"────────────────────\n"
-                f"📌 <b>Заголовок:</b>\n{element[1]}\n\n"
-                f"⏳ <b>Срок выполнения:</b>\n{element[4]}\n\n"
+                f"📌 <b>Задача {element[0]}</b>\n\n"
+                f"<pre>{element[1]}</pre>\n\n"
+                f"⏳ <b>Срок выполнения:</b> {element[4].strftime("%d.%m.%Y")}\n"
                 f"👤 <b>Автор:</b> {element[2]}\n"
-                f"🚪 <b>Кабинет:</b> {element[3]}\n\n"
-                f"🔔 <b>Напоминание:</b> {'Установлено' if element[6] else 'Нет'}\n"
-                f"────────────────────\n"
-                f"💬 <b>Комментарии:</b>\n{element[5] or 'Пока нет комментариев'}"
+                f"🚪 <b>Кабинет:</b> {element[3]}\n"
+                f"🔔 <b>Напоминание:</b> {element[6].strftime("%d.%m.%Y %H:%M") if element[6] else 'Нет'}\n"
+                "──────────────────────────────\n"
+                f"💬 <b>Комментарии:</b>\n<blockquote>{element[5] or 'Пока нет комментариев'}</blockquote>"
             )
             # Создаем инлайн-кнопки
             builder = InlineKeyboardBuilder()
@@ -309,13 +311,16 @@ async def open_task_id(message: Message, state: FSMContext):
     db.update_task_comment(add_comment_task_id, edit_task_comment)
     for element in edit_task_list:
         if add_comment_task_id == element[7]:
+            element[5] = edit_task_comment
             task_card = (
-                f"📝 *Задание:* {element[1]}\n\n"
-                f"⏰ *Крайний срок:* {element[4]}\n"
-                f"👤 *От кого:* {element[2]}\n"
-                f"🚪 *Кабинет:* {element[3]}\n"
-                f"🔔 *Напоминание:* {element[6]}\n\n"
-                f"💬 *Комментарий:*\n{edit_task_comment}"
+                f"📌 <b>Задача {element[0]}</b>\n\n"
+                f"<pre>{element[1]}</pre>\n\n"
+                f"⏳ <b>Срок выполнения:</b> {element[4].strftime("%d.%m.%Y")}\n"
+                f"👤 <b>Автор:</b> {element[2]}\n"
+                f"🚪 <b>Кабинет:</b> {element[3]}\n"
+                f"🔔 <b>Напоминание:</b> {element[6].strftime("%d.%m.%Y %H:%M") if element[6] else 'Нет'}\n"
+                "──────────────────────────────\n"
+                f"💬 <b>Комментарии:</b>\n<blockquote>{element[5] or 'Пока нет комментариев'}</blockquote>"
             )
             # Создаем инлайн-кнопки
             builder = InlineKeyboardBuilder()
@@ -323,7 +328,7 @@ async def open_task_id(message: Message, state: FSMContext):
             builder.add(InlineKeyboardButton(text="✅ Закрыть", callback_data="close_task"))
             builder.adjust(1)
             # Отправляем сообщение с карточкой и кнопками
-            await message.answer(task_card, parse_mode="Markdown", reply_markup=builder.as_markup())
+            await message.answer(task_card, parse_mode="HTML", reply_markup=builder.as_markup())
             await state.clear()
 
 
