@@ -37,6 +37,19 @@ def is_valid_date(date_text):
     except ValueError:
         return False
 
+def task_card(element):
+    task_card = (
+                f"📌 <b>ЗАДАЧА №{element[0]}</b>\n\n"
+                f"<b>{element[1]}</b>\n\n"
+                "──────────────────────────────\n"
+                f"⏳ <b>Срок выполнения:</b> {element[4].strftime("%d.%m.%Y")}\n"
+                f"👤 <b>Автор:</b> {element[2]}\n"
+                f"🚪 <b>Кабинет:</b> {element[3]}\n"
+                f"🔔 <b>Напоминание:</b> {element[6].strftime("%d.%m.%Y %H:%M") if element[6] else 'Нет'}\n\n"
+                f"💬 <b>Комментарии:</b>\n<blockquote>{element[5] or 'Пока нет комментариев'}</blockquote>"
+            )
+    return task_card
+
 
 class NewTicket(StatesGroup):
     input_description_ticket = State()
@@ -187,9 +200,9 @@ async def get_task_list(callback_query: CallbackQuery) -> None:
     for element in output_list:
         status_icon = "⏰" if element[4] else ' ─'
         task_text = (
-            f"📌 <b>Задача {element[0]}</b>                                                      {status_icon}\n\n"
-            f"<pre>{element[1]}</pre>\n"
-            f"📅 <i>Срок:</i> {element[2].strftime("%d.%m.%Y")}"
+            f"📌  <b>Задача №{element[0]}</b>                                                    {status_icon}\n"
+            f"<blockquote>{element[1]}</blockquote>\n"
+            f"📅  <i>Срок:</i> {element[2].strftime("%d.%m.%Y")}"
         )
         await callback_query.message.answer(task_text)
     await callback_query.message.answer('Это все задачи на сегодня 🫣', reply_markup=builder.as_markup())
@@ -208,7 +221,7 @@ async def delete_task_id(message: Message, state: FSMContext):
     for element in edit_task_list:
         if num_task == element[0]:
             delete_task_choice_id = element[7]
-            await message.answer(f"⚠️ Вы действительно хотите удалить задачу? \n{element[1]}", reply_markup=choice_kb)
+            await message.answer(f"⚠️ Вы действительно хотите удалить задачу?\n<b>{element[1]}</b>", reply_markup=choice_kb)
             await state.set_state(DelTicket.delete_ticket_confirmation)
 
 @dp.message(DelTicket.delete_ticket_confirmation)
@@ -238,7 +251,7 @@ async def ready_task_id(message: Message, state: FSMContext):
     for element in edit_task_list:
         if num_task == element[0]:
             ready_task_choice_id = element[7]
-            await message.answer(f"⚠️ Вы действительно хотите завершить задачу? \n{element[1]}", reply_markup=choice_kb)
+            await message.answer(f"⚠️ Вы действительно хотите завершить задачу?\n<b>{element[1]}</b>", reply_markup=choice_kb)
             await state.set_state(ReadyTicket.ready_ticket_confirmation)
 
 @dp.message(ReadyTicket.ready_ticket_confirmation)
@@ -270,23 +283,13 @@ async def open_task_id(message: Message, state: FSMContext):
     for element in edit_task_list:
         if num_task == element[0]:
             add_comment_task_id = element[7]
-            task_card = (
-                f"📌 <b>Задача {element[0]}</b>\n\n"
-                f"<pre>{element[1]}</pre>\n\n"
-                f"⏳ <b>Срок выполнения:</b> {element[4].strftime("%d.%m.%Y")}\n"
-                f"👤 <b>Автор:</b> {element[2]}\n"
-                f"🚪 <b>Кабинет:</b> {element[3]}\n"
-                f"🔔 <b>Напоминание:</b> {element[6].strftime("%d.%m.%Y %H:%M") if element[6] else 'Нет'}\n"
-                "──────────────────────────────\n"
-                f"💬 <b>Комментарии:</b>\n<blockquote>{element[5] or 'Пока нет комментариев'}</blockquote>"
-            )
             # Создаем инлайн-кнопки
             builder = InlineKeyboardBuilder()
             builder.add(InlineKeyboardButton(text="✏️ Добавить комментарий", callback_data="edit_task_comment"))
             builder.add(InlineKeyboardButton(text="❌ Закрыть", callback_data="close_task"))
             builder.adjust(1)
             # Отправляем сообщение с карточкой и кнопками
-            await message.answer(task_card, parse_mode="HTML", reply_markup=builder.as_markup())
+            await message.answer(task_card(element), parse_mode="HTML", reply_markup=builder.as_markup())
             await state.clear()
 
 @dp.callback_query(F.data == "close_task")
@@ -312,23 +315,13 @@ async def open_task_id(message: Message, state: FSMContext):
     for element in edit_task_list:
         if add_comment_task_id == element[7]:
             element[5] = edit_task_comment
-            task_card = (
-                f"📌 <b>Задача {element[0]}</b>\n\n"
-                f"<pre>{element[1]}</pre>\n\n"
-                f"⏳ <b>Срок выполнения:</b> {element[4].strftime("%d.%m.%Y")}\n"
-                f"👤 <b>Автор:</b> {element[2]}\n"
-                f"🚪 <b>Кабинет:</b> {element[3]}\n"
-                f"🔔 <b>Напоминание:</b> {element[6].strftime("%d.%m.%Y %H:%M") if element[6] else 'Нет'}\n"
-                "──────────────────────────────\n"
-                f"💬 <b>Комментарии:</b>\n<blockquote>{element[5] or 'Пока нет комментариев'}</blockquote>"
-            )
             # Создаем инлайн-кнопки
             builder = InlineKeyboardBuilder()
             builder.add(InlineKeyboardButton(text="✏️ Добавить комментарий", callback_data="edit_task_comment"))
             builder.add(InlineKeyboardButton(text="✅ Закрыть", callback_data="close_task"))
             builder.adjust(1)
             # Отправляем сообщение с карточкой и кнопками
-            await message.answer(task_card, parse_mode="HTML", reply_markup=builder.as_markup())
+            await message.answer(task_card(element), parse_mode="HTML", reply_markup=builder.as_markup())
             await state.clear()
 
 
