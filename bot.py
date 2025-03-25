@@ -87,6 +87,7 @@ choice_kb = ReplyKeyboardMarkup(keyboard=[[button_yes], [button_no]], resize_key
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
+    print(message.chat.id)
     welcome_text = (
         f"✨ <b>Добро пожаловать, {html.quote(message.from_user.full_name)}!</b> ✨\n"
         "──────────────────────────────\n"
@@ -176,7 +177,7 @@ async def new_task_reminder_date(message: Message, state: FSMContext):
                     True,
                     new_task_data[2]
                 ])
-    await message.answer(f'✅ Установлено напоминание - {reminder_datetime}')
+    await message.answer(f'Установлено напоминание - {reminder_datetime.strftime("%d.%m.%Y %H:%M")}')
     await message.answer('✅ Новая задача добавлена')
     await state.clear()
     await message.answer('Выберите действие для дальнейшей работы с ботом:', reply_markup=builder.as_markup())
