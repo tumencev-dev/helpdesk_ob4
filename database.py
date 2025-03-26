@@ -84,3 +84,10 @@ class Database():
             cur.execute(sql)
             conn.commit()  
         conn.close()
+
+    def set_status_active(id):
+        conn = Database.connection()
+        with conn.cursor() as cur:
+            cur.execute(f"UPDATE tasks SET status=False, date=NOW() WHERE id={id};")
+            conn.commit()  
+        conn.close()

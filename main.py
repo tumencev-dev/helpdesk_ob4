@@ -1,6 +1,6 @@
 from database import Database as db
 from pywebio.input import actions, input, input_group, textarea, checkbox, DATE, DATETIME, TEXT
-from pywebio.output import put_text, put_markdown, put_table, put_grid, put_column, put_row, put_button, put_buttons, put_html, put_collapse, popup, close_popup, use_scope, scroll_to, toast, clear
+from pywebio.output import put_text, put_markdown, put_grid, put_column, put_row, put_button, put_buttons, put_html, put_collapse, popup, close_popup, use_scope, scroll_to, toast, clear
 from pywebio.platform import start_server
 from pywebio import config
 from pywebio.session import run_js, hold
@@ -17,7 +17,7 @@ config(title="Helpdesk Tasks")
 status_message = 0
 
 
-def show_task_description(task_number, description):
+def show_task_description(task_number, description, status):
     global status_message
     clear()
     with use_scope('output-2'):
@@ -32,74 +32,137 @@ def show_task_description(task_number, description):
         '''
         
         # Шапка с номером задачи
-        put_html(f'''
-            <div style="{container_style}">
-                <div style="display: flex; align-items: center;">
-                    <svg style="width: 32px; height: 32px; margin-right: 15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    <h2 style="margin: 0; color: #2c3e50;">Задача #{task_number}</h2>
-                </div>
-        ''')
+        if status == 'active':
+            put_html(f'''
+                <div style="{container_style}">
+                    <div style="display: flex; align-items: center;">
+                        <svg style="width: 32px; height: 32px; margin-right: 15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <h2 style="margin: 0; color: #2c3e50;">Задача #{task_number}</h2>
+                    </div>
+            ''')
+        if status == 'done':
+            put_html(f'''
+                <div style="{container_style}">
+                    <div style="display: flex; align-items: center;">
+                        <svg style="width: 32px; height: 32px; margin-right: 15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <h2 style="margin: 0; color: #2c3e50;">Задача #{task_number} (ЗАВЕРШЕНА)</h2>
+                    </div>
+            ''')
 
         if status_message == 3:
             toast('Задача отредактирована', color='blue')
             status_message = 0
-
-        # Основное содержание
-        put_grid([
-            [put_markdown(f'**{description[1]}**').style('font-size: 18px; margin: 0 0 50px 0;')],
-            [
-                put_row([
-                    # Первый столбец
-                    put_column([
+        if status == 'active':
+            # Основное содержание
+            put_grid([
+                [put_markdown(f'**{description[1]}**').style('font-size: 18px; margin: 0 0 50px 0;')],
+                [
+                    put_row([
+                        # Первый столбец
                         put_column([
-                            put_html('<i class="fas fa-user" style="margin-right: 8px;"></i>'),
-                            put_text(f'От кого: {description[2]}').style('margin-bottom: 0')
-                        ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
+                            put_column([
+                                put_html('<i class="fas fa-user" style="margin-right: 8px;"></i>'),
+                                put_text(f'От кого: {description[2]}').style('margin-bottom: 0')
+                            ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
+                            
+                            put_column([
+                                put_html('<i class="fas fa-door-open" style="margin-right: 8px;"></i>'),
+                                put_text(f'Кабинет: {description[3]}').style('margin-bottom: 0')
+                            ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
+                        ]).style('margin-right: 300px;'),  # Отступ между колонками
                         
+                        # Второй столбец
                         put_column([
-                            put_html('<i class="fas fa-door-open" style="margin-right: 8px;"></i>'),
-                            put_text(f'Кабинет: {description[3]}').style('margin-bottom: 0')
-                        ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
-                    ]).style('margin-right: 300px;'),  # Отступ между колонками
-                    
-                    # Второй столбец
-                    put_column([
-                        put_column([
-                            put_html('<i class="fas fa-calendar" style="margin-right: 8px;"></i>'),
-                            put_text(f'Срок: {description[4].strftime("%d.%m.%Y")}').style('margin-bottom: 0')
-                        ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
+                            put_column([
+                                put_html('<i class="fas fa-calendar" style="margin-right: 8px;"></i>'),
+                                put_text(f'Срок: {description[4].strftime("%d.%m.%Y")}').style('margin-bottom: 0')
+                            ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
 
+                            put_column([
+                                put_html('<i class="fas fa-bell" style="margin-right: 8px;"></i>'),
+                                put_text(f'Напоминание: {description[9].strftime("%d.%m.%Y %H:%M") if description[8] else "Нет"}').style('margin-bottom: 0')
+                            ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
+                        ])
+                    ]).style('display: flex; gap: 30px;')  # Общий контейнер с отступами
+                ],
+                [put_markdown('**Комментарий:**').style('margin-top: 20px;')],
+                [put_text(description[5]).style(
+                    'background: #f8f9fa;'
+                    'padding: 15px;'
+                    'border-radius: 8px;'
+                    'margin: 10px 0;'
+                    'color: #495057;'
+                )],
+                [
+                    put_buttons([
+                        {'label': '✅ Отметить выполнение', 'value': 'complete', 'color': 'success'},
+                        {'label': '✏️ Редактировать', 'value': 'edit', 'color': 'warning'},
+                        {'label': '🗑️ Удалить', 'value': 'delete', 'color': 'danger'},
+                        {'label': '✖️ Закрыть', 'value': 'close', 'color': 'secondary'}
+                    ], onclick=[
+                        lambda: confirm_set_status(task_number, description),
+                        lambda: edit_task(task_number, description),
+                        lambda: confirm_delete(task_number, description),
+                        lambda: run_js("location.reload()")
+                    ]).style('margin-top: 25px; display: flex; gap: 10px; flex-wrap: wrap;')
+                ]
+            ], cell_widths='100%').style('padding: 20px 0;')
+        
+        if status == 'done':
+                # Основное содержание
+            put_grid([
+                [put_markdown(f'**{description[1]}**').style('font-size: 18px; margin: 0 0 50px 0;')],
+                [
+                    put_row([
+                        # Первый столбец
                         put_column([
-                            put_html('<i class="fas fa-bell" style="margin-right: 8px;"></i>'),
-                            put_text(f'Напоминание: {description[9].strftime("%d.%m.%Y %H:%M") if description[8] else "Нет"}').style('margin-bottom: 0')
-                        ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
-                    ])
-                ]).style('display: flex; gap: 30px;')  # Общий контейнер с отступами
-            ],
-            [put_markdown('**Комментарий:**').style('margin-top: 20px;')],
-            [put_text(description[5]).style(
-                'background: #f8f9fa;'
-                'padding: 15px;'
-                'border-radius: 8px;'
-                'margin: 10px 0;'
-                'color: #495057;'
-            )],
-            [
-                put_buttons([
-                    {'label': '✅ Отметить выполнение', 'value': 'complete', 'color': 'success'},
-                    {'label': '✏️ Редактировать', 'value': 'edit', 'color': 'warning'},
-                    {'label': '🗑️ Удалить', 'value': 'delete', 'color': 'danger'},
-                    {'label': '✖️ Закрыть', 'value': 'close', 'color': 'secondary'}
-                ], onclick=[
-                    lambda: confirm_set_status(task_number, description),
-                    lambda: edit_task(task_number, description),
-                    lambda: confirm_delete(task_number, description),
-                    lambda: run_js("location.reload()")
-                ]).style('margin-top: 25px; display: flex; gap: 10px; flex-wrap: wrap;')
-            ]
-        ], cell_widths='100%').style('padding: 20px 0;')
+                            put_column([
+                                put_html('<i class="fas fa-user" style="margin-right: 8px;"></i>'),
+                                put_text(f'От кого: {description[2]}').style('margin-bottom: 0')
+                            ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
+                            
+                            put_column([
+                                put_html('<i class="fas fa-door-open" style="margin-right: 8px;"></i>'),
+                                put_text(f'Кабинет: {description[3]}').style('margin-bottom: 0')
+                            ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
+                        ]).style('margin-right: 300px;'),  # Отступ между колонками
+                        
+                        # Второй столбец
+                        put_column([
+                            put_column([
+                                put_html('<i class="fas fa-calendar" style="margin-right: 8px;"></i>'),
+                                put_text(f'Срок: {description[4].strftime("%d.%m.%Y")}').style('margin-bottom: 0')
+                            ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
+
+                            put_column([
+                                put_html('<i class="fas fa-bell" style="margin-right: 8px;"></i>'),
+                                put_text(f'Напоминание: {description[9].strftime("%d.%m.%Y %H:%M") if description[8] else "Нет"}').style('margin-bottom: 0')
+                            ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
+                        ])
+                    ]).style('display: flex; gap: 30px;')  # Общий контейнер с отступами
+                ],
+                [put_markdown('**Комментарий:**').style('margin-top: 20px;')],
+                [put_text(description[5]).style(
+                    'background: #f8f9fa;'
+                    'padding: 15px;'
+                    'border-radius: 8px;'
+                    'margin: 10px 0;'
+                    'color: #495057;'
+                )],
+                [
+                    put_buttons([
+                        {'label': '✅ Вернуть в работу', 'value': 'return', 'color': 'success'},
+                        {'label': '✖️ Закрыть', 'value': 'close', 'color': 'secondary'}
+                    ], onclick=[
+                        lambda: return_task(description[0]),
+                        lambda: get_ready_tasks()
+                    ]).style('margin-top: 25px; display: flex; gap: 10px; flex-wrap: wrap;')
+                ]
+            ], cell_widths='100%').style('padding: 20px 0;')
         
         put_html('</div>')  # Закрываем основной контейнер
         scroll_to(position='top')
@@ -205,7 +268,7 @@ def edit_task(numer, task):
 
 def set_task():
     today = datetime.date.today()
-    tomorrow = today + datetime.timedelta(days=1)
+    #tomorrow = today + datetime.timedelta(days=1)
     clear()
     scroll_to(position='top')
     put_html('<br>')
@@ -239,27 +302,65 @@ def set_task():
         status_message = 4
     else:
         run_js("location.reload()")
-        
+
 
 def get_ready_tasks():
-    output_list = []
+    clear()
     task_ready_list = db.get_tasks(True, "completed")
     task_ready_list.reverse()
     number = 1
-    for task in task_ready_list:
-        output_list.append((number, task[1], task[2], task[3], task[5], task[7].strftime("%d.%m.%Y")))
-        number += 1
-    clear()
+
     with use_scope('output'):
-        put_table(output_list, header=[
-            "№",
-            "Задача",
-            "От кого поступила",
-            "№ кабинета",
-            "Комментарий",
-            "Дата выполнения"
+        put_html('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">')
+        for task in task_ready_list:
+
+            btn = put_button(
+                    label=str(number),
+                    onclick=lambda n=number, t=task, s='done': show_task_description(n, t, s)
+                ).style('margin-right: 15px;')
+
+            card_content = put_column([
+                put_markdown(f"**{task[1]}**"),
+                put_row([
+                    put_column([
+                        put_html(f'<i class="fas fa-user-tag" style="width: 20px; margin-right: 10px; color: #e67e22;"></i> {task[2]}').style('color: #718096;'),
+                        put_html(f'<i class="fas fa-door-open" style="width: 20px; margin-right: 10px; color: #27ae60;"></i> {task[3]}').style('color: #718096;')
+                    ]),
+                    put_column([
+                        put_html(
+                            f'<i class="fas fa-calendar-check" style="width: 20px; margin-right: 10px; color: #9b59b6;"></i>'
+                            '<span style="color: #718096;">Дата выполнения: </span>'
+                            f'<span>{task[7].strftime("%d.%m.%Y")}</span>'
+                            '</div>'
+                        ).style('margin-left: auto; height: 50px;')
+                    ]).style('margin-left: auto;')
+                ]).style('height: min-content;')
             ])
+
+            card = put_row([
+                        btn,
+                        card_content
+                    ], size='10% 90%').style(
+                        'background: white;'
+                        'border-radius: 12px;'
+                        'padding: 20px;'
+                        'margin: 10px 0;'
+                        'box-shadow: 0 2px 8px rgba(0,0,0,0.1);'
+                        'align-items: flex-start;'
+                        'width: 100%;'
+                    )
+            
+            put_column([card]).style('''
+                &:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.10);
+                }
+            ''')
+            
+            number += 1
+
         scroll_to(position='top')
+   
     actions(buttons=["Закрыть"])
     run_js("location.reload()")
 
@@ -286,6 +387,12 @@ def get_task_group(task_date):
     return '📅 Остальные'
 
 
+def return_task(id):
+    global status_message
+    db.set_status_active(id)
+    run_js("location.reload()")
+    status_message = 3
+
 
 def helpdesk():
     global status_message
@@ -294,6 +401,7 @@ def helpdesk():
         toast_config = {
             1: ('Задача удалена', 'red'),
             2: ('Задача выполнена', 'green'),
+            3: ('Задача возвращена в работу', 'green'),
             4: ('Новая задача добавлена', 'teal')
         }
         if status_message in toast_config:
@@ -333,7 +441,7 @@ def helpdesk():
                         label=str(number),
                         color=btn_style,
                         outline=True,
-                        onclick=lambda n=number, t=task_data: show_task_description(n, t)
+                        onclick=lambda n=number, t=task, s='active': show_task_description(n, t, s)
                     ).style('margin-right: 15px;')
                     number += 1
 
