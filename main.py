@@ -257,13 +257,13 @@ def edit_task(numer, task):
                     if task[0] == data_list[0]:
                         task_data = task
                 status_message = 3
-                show_task_description(task_number=numer, description=task_data)
+                show_task_description(task_number=numer, description=task_data, status='active')
                 
         else:
             for elem in db.get_tasks(False, "date"):
                     if elem[0] == task[0]:
                         task_data = elem
-            show_task_description(task_number=numer, description=task_data)
+            show_task_description(task_number=numer, description=task_data, status='active')
             
 
 def set_task():
@@ -323,24 +323,24 @@ def get_ready_tasks():
                 put_markdown(f"**{task[1]}**"),
                 put_row([
                     put_column([
-                        put_html(f'<i class="fas fa-user-tag" style="width: 20px; margin-right: 10px; color: #e67e22;"></i> {task[2]}').style('color: #718096;'),
-                        put_html(f'<i class="fas fa-door-open" style="width: 20px; margin-right: 10px; color: #27ae60;"></i> {task[3]}').style('color: #718096;')
+                        put_html(f'<i class="fas fa-user-tag" style="width: 20px; margin-right: 10px; color: #e67e22;"></i> {task[2]}').style('color: #34495e;'),
+                        put_html(f'<i class="fas fa-door-open" style="width: 20px; margin-right: 10px; color: #e67e22;"></i> {task[3]}').style('color: #34495e;')
                     ]),
                     put_column([
                         put_html(
-                            f'<i class="fas fa-calendar-check" style="width: 20px; margin-right: 10px; color: #9b59b6;"></i>'
-                            '<span style="color: #718096;">Дата выполнения: </span>'
+                            f'<i class="fas fa-calendar-check" style="width: 10px; margin-right: 10px; color: #27ae60;"></i>'
+                            '<span style="color: #34495e;">Дата выполнения: </span>'
                             f'<span>{task[7].strftime("%d.%m.%Y")}</span>'
                             '</div>'
                         ).style('margin-left: auto; height: 50px;')
                     ]).style('margin-left: auto;')
                 ]).style('height: min-content;')
-            ])
+            ]).style('grid-template-rows: auto auto;')
 
             card = put_row([
                         btn,
                         card_content
-                    ], size='10% 90%').style(
+                    ], size='8% 92%').style(
                         'background: white;'
                         'border-radius: 12px;'
                         'padding: 20px;'
@@ -450,13 +450,13 @@ def helpdesk():
                         put_markdown(f"**{task[1]}**"),
                         put_row([
                             put_column([
-                                put_html(f'<i class="fas fa-user"></i> {task[2]}').style('color: #718096;'),
-                                put_html(f'<i class="fas fa-door-open"></i> {task[3]}').style('color: #718096;')
+                                put_html(f'<i class="fas fa-user" style="width: 20px; margin-right: 10px;"></i> {task[2]}').style('color: #34495e;'),
+                                put_html(f'<i class="fas fa-door-open" style="width: 20px; margin-right: 10px;"></i> {task[3]}').style('color: #34495e;')
                             ]),
                             put_column([
                                 put_html(
                                     f'<div style="display: flex; align-items: center; gap: 8px; {get_date_style(task[4])}">'
-                                    f'<i class="fas fa-calendar-day"></i>'
+                                    f'<i class="fas fa-calendar-day" style="width: 10px; margin-right: 5px;"></i>'
                                     f'<span>{task[4].strftime("%d.%m.%Y")}</span>'
                                     '</div>'
                                 ).style('margin-left: auto; height: 50px;')
@@ -468,11 +468,11 @@ def helpdesk():
                     card = put_row([
                         num_btn,
                         info_block
-                    ], size='10% 90%').style(
+                    ], size='8% 92%').style(
                         'background: white;'
                         'border-radius: 12px;'
                         'padding: 20px;'
-                        'margin: 10px 0;'
+                        'margin: 20px 0;'
                         'box-shadow: 0 2px 8px rgba(0,0,0,0.1);'
                         'align-items: flex-start;'
                         'width: 100%;'
