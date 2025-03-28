@@ -361,7 +361,7 @@ def get_ready_tasks():
 
         scroll_to(position='top')
    
-    actions(buttons=["Закрыть"])
+    actions(buttons=["Закрыть вкладку выполненные"])
     run_js("location.reload()")
 
 
