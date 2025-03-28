@@ -49,7 +49,7 @@ def show_task_description(task_number, description, status):
                         <svg style="width: 32px; height: 32px; margin-right: 15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
-                        <h2 style="margin: 0; color: #2c3e50;">Задача #{task_number} (ЗАВЕРШЕНА)</h2>
+                        <h2 style="margin: 0; color: #2c3e50;">Задача #{task_number} (ЗАВЕРШЕНА - {description[7].strftime("%d.%m.%Y")})</h2>
                     </div>
             ''')
 
@@ -65,12 +65,12 @@ def show_task_description(task_number, description, status):
                         # Первый столбец
                         put_column([
                             put_column([
-                                put_html('<i class="fas fa-user" style="margin-right: 8px;"></i>'),
+                                put_html('<i class="fas fa-user" style="width: 20px; margin-right: 10px;"></i>'),
                                 put_text(f'От кого: {description[2]}').style('margin-bottom: 0')
                             ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
                             
                             put_column([
-                                put_html('<i class="fas fa-door-open" style="margin-right: 8px;"></i>'),
+                                put_html('<i class="fas fa-door-open" style="width: 20px; margin-right: 10px;"></i>'),
                                 put_text(f'Кабинет: {description[3]}').style('margin-bottom: 0')
                             ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
                         ]).style('margin-right: 300px;'),  # Отступ между колонками
@@ -78,12 +78,12 @@ def show_task_description(task_number, description, status):
                         # Второй столбец
                         put_column([
                             put_column([
-                                put_html('<i class="fas fa-calendar" style="margin-right: 8px;"></i>'),
+                                put_html('<i class="fas fa-calendar" style="width: 20px; margin-right: 10px;"></i>'),
                                 put_text(f'Срок: {description[4].strftime("%d.%m.%Y")}').style('margin-bottom: 0')
                             ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
 
                             put_column([
-                                put_html('<i class="fas fa-bell" style="margin-right: 8px;"></i>'),
+                                put_html('<i class="fas fa-bell" style="width: 20px; margin-right: 10px;"></i>'),
                                 put_text(f'Напоминание: {description[9].strftime("%d.%m.%Y %H:%M") if description[8] else "Нет"}').style('margin-bottom: 0')
                             ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
                         ])
@@ -121,12 +121,12 @@ def show_task_description(task_number, description, status):
                         # Первый столбец
                         put_column([
                             put_column([
-                                put_html('<i class="fas fa-user" style="margin-right: 8px;"></i>'),
+                                put_html('<i class="fas fa-user" style="width: 20px; margin-right: 10px;"></i>'),
                                 put_text(f'От кого: {description[2]}').style('margin-bottom: 0')
                             ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
                             
                             put_column([
-                                put_html('<i class="fas fa-door-open" style="margin-right: 8px;"></i>'),
+                                put_html('<i class="fas fa-door-open" style="width: 20px; margin-right: 10px;"></i>'),
                                 put_text(f'Кабинет: {description[3]}').style('margin-bottom: 0')
                             ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
                         ]).style('margin-right: 300px;'),  # Отступ между колонками
@@ -134,12 +134,12 @@ def show_task_description(task_number, description, status):
                         # Второй столбец
                         put_column([
                             put_column([
-                                put_html('<i class="fas fa-calendar" style="margin-right: 8px;"></i>'),
+                                put_html('<i class="fas fa-calendar" style="width: 20px; margin-right: 10px;"></i>'),
                                 put_text(f'Срок: {description[4].strftime("%d.%m.%Y")}').style('margin-bottom: 0')
                             ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;'),
 
                             put_column([
-                                put_html('<i class="fas fa-bell" style="margin-right: 8px;"></i>'),
+                                put_html('<i class="fas fa-bell" style="width: 20px; margin-right: 10px;"></i>'),
                                 put_text(f'Напоминание: {description[9].strftime("%d.%m.%Y %H:%M") if description[8] else "Нет"}').style('margin-bottom: 0')
                             ]).style('display: flex; align-items: center; color: #34495e; margin: 10px 0;')
                         ])
@@ -323,13 +323,13 @@ def get_ready_tasks():
                 put_markdown(f"**{task[1]}**"),
                 put_row([
                     put_column([
-                        put_html(f'<i class="fas fa-user-tag" style="width: 20px; margin-right: 10px; color: #e67e22;"></i> {task[2]}').style('color: #34495e;'),
-                        put_html(f'<i class="fas fa-door-open" style="width: 20px; margin-right: 10px; color: #e67e22;"></i> {task[3]}').style('color: #34495e;')
+                        put_html(f'<i class="fas fa-user-tag" style="width: 20px; margin-right: 10px; color: #e67e22;"></i>{task[2]}').style('color: #34495e;'),
+                        put_html(f'<i class="fas fa-door-open" style="width: 20px; margin-right: 10px; color: #e67e22;"></i>{task[3]}').style('color: #34495e;')
                     ]),
                     put_column([
                         put_html(
                             f'<i class="fas fa-calendar-check" style="width: 10px; margin-right: 10px; color: #27ae60;"></i>'
-                            '<span style="color: #34495e;">Дата выполнения: </span>'
+                            '<span style="color: #34495e;"></span>'
                             f'<span>{task[7].strftime("%d.%m.%Y")}</span>'
                             '</div>'
                         ).style('margin-left: auto; height: 50px;')
@@ -450,8 +450,8 @@ def helpdesk():
                         put_markdown(f"**{task[1]}**"),
                         put_row([
                             put_column([
-                                put_html(f'<i class="fas fa-user" style="width: 20px; margin-right: 10px;"></i> {task[2]}').style('color: #34495e;'),
-                                put_html(f'<i class="fas fa-door-open" style="width: 20px; margin-right: 10px;"></i> {task[3]}').style('color: #34495e;')
+                                put_html(f'<i class="fas fa-user" style="width: 20px; margin-right: 10px;"></i>{task[2]}').style('color: #34495e;'),
+                                put_html(f'<i class="fas fa-door-open" style="width: 20px; margin-right: 10px;"></i>{task[3]}').style('color: #34495e;')
                             ]),
                             put_column([
                                 put_html(
