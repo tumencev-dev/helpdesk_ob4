@@ -413,7 +413,7 @@ def helpdesk():
             put_html('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">')
             # Заголовок страницы
             put_row([
-                put_html('<h2 style="margin: 0; color: #2d3748;">🎯 Helpdesk Tasks</h2>'),
+                put_html('<h2 style="margin: 0; color: #2d3748;">📌 Helpdesk Tasks</h2>'),
                 put_buttons([
                     {'label': '✚ Новая задача', 'value': 'add', 'color': 'primary'},
                     {'label': '🗹 Выполненные', 'value': 'completed', 'color': 'success'}
