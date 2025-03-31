@@ -99,10 +99,10 @@ def show_task_description(task_number, description, status):
                 )],
                 [
                     put_buttons([
-                        {'label': '✅ Отметить выполнение', 'value': 'complete', 'color': 'success'},
-                        {'label': '✏️ Редактировать', 'value': 'edit', 'color': 'warning'},
-                        {'label': '🗑️ Удалить', 'value': 'delete', 'color': 'danger'},
-                        {'label': '✖️ Закрыть', 'value': 'close', 'color': 'secondary'}
+                        {'label': '🗹 Отметить выполнение', 'value': 'complete', 'color': 'success'},
+                        {'label': '✎ Редактировать', 'value': 'edit', 'color': 'warning'},
+                        {'label': '🗑 Удалить', 'value': 'delete', 'color': 'danger'},
+                        {'label': '✕ Закрыть', 'value': 'close', 'color': 'secondary'}
                     ], onclick=[
                         lambda: confirm_set_status(task_number, description),
                         lambda: edit_task(task_number, description),
@@ -155,8 +155,8 @@ def show_task_description(task_number, description, status):
                 )],
                 [
                     put_buttons([
-                        {'label': '✅ Вернуть в работу', 'value': 'return', 'color': 'success'},
-                        {'label': '✖️ Закрыть', 'value': 'close', 'color': 'secondary'}
+                        {'label': '🗘 Вернуть в работу', 'value': 'return', 'color': 'success'},
+                        {'label': '✕ Закрыть', 'value': 'close', 'color': 'secondary'}
                     ], onclick=[
                         lambda: return_task(description[0]),
                         lambda: get_ready_tasks()
@@ -415,8 +415,8 @@ def helpdesk():
             put_row([
                 put_html('<h2 style="margin: 0; color: #2d3748;">🎯 Helpdesk Tasks</h2>'),
                 put_buttons([
-                    {'label': '➕ Новая задача', 'value': 'add', 'color': 'primary'},
-                    {'label': '✔ Выполненные', 'value': 'completed', 'color': 'success'}
+                    {'label': '✚ Новая задача', 'value': 'add', 'color': 'primary'},
+                    {'label': '🗹 Выполненные', 'value': 'completed', 'color': 'success'}
                 ], onclick=[lambda: set_task(), lambda: get_ready_tasks()]).style('margin-left: auto;')
             ]).style('align-items: center; margin-bottom: 30px;')
 
