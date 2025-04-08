@@ -99,7 +99,7 @@ def show_task_description(task_number, description, status):
                 )],
                 [
                     put_buttons([
-                        {'label': '✅ Отметить выполнение', 'value': 'complete', 'color': 'success'},
+                        {'label': '✔ Отметить выполнение', 'value': 'complete', 'color': 'success'},
                         {'label': '✏️ Редактировать', 'value': 'edit', 'color': 'warning'},
                         {'label': '🗑️ Удалить', 'value': 'delete', 'color': 'danger'},
                         {'label': '✖️ Закрыть', 'value': 'close', 'color': 'secondary'}
@@ -155,7 +155,7 @@ def show_task_description(task_number, description, status):
                 )],
                 [
                     put_buttons([
-                        {'label': '✅ Вернуть в работу', 'value': 'return', 'color': 'success'},
+                        {'label': '↩ Вернуть в работу', 'value': 'return', 'color': 'success'},
                         {'label': '✖️ Закрыть', 'value': 'close', 'color': 'secondary'}
                     ], onclick=[
                         lambda: return_task(description[0]),
