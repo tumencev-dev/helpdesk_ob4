@@ -1,4 +1,5 @@
 from database import Database as db
+from urllib.parse import quote
 import requests
 import datetime
 from time import sleep
@@ -7,7 +8,8 @@ from time import sleep
 def send_notification(message):
     TOKEN = '7994013311:AAFdbCZ5FWYfYV8WO7G4NEh5H522QOjOfAQ'
     chat_id = '453987381'
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id}&text={message}"
+    encoded_message = quote(message)
+    url = f'https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id}&text={encoded_message}&parse_mode=HTML'
     requests.get(url).json()
 
 
@@ -38,5 +40,6 @@ while True:
         message = len(notification_list)
     for element in notification_list:
         if element[2].strftime("%Y-%m-%d %H:%M") == timestamp.strftime("%Y-%m-%d %H:%M"):
-            send_notification(f'⚠️ Напоминание в {element[2].strftime("%H:%M")} ⚠️\n{element[1]}')
+            send_notification(f"⚠️ <b>Напоминание в {element[2].strftime("%H:%M")}</b> ⚠️\n{element[1]}")
+            print(f'{timestamp.strftime("%Y-%m-%d %H:%M")} - Отправлено напоминание о задаче')
     sleep(60)
